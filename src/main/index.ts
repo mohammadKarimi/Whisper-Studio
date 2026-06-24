@@ -27,7 +27,7 @@ function createMainWindow(): BrowserWindow {
     height: 800,
     minWidth: 960,
     minHeight: 640,
-    title: 'WhisperX',
+    title: 'Whisper Studio',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
     trafficLightPosition: { x: 16, y: 14 },
     backgroundColor: '#18191f',

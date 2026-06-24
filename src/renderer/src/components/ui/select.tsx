@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ChevronDown } from 'lucide-react'
 
+import { captions } from '@/captions'
 import { cn } from '@/lib/utils'
 
 interface SelectContextValue {
@@ -37,7 +38,7 @@ function useSelect(): SelectContextValue {
   const context = React.useContext(SelectContext)
 
   if (!context) {
-    throw new Error('Select components must be used inside Select')
+    throw new Error(captions.errors.selectContext)
   }
 
   return context
@@ -80,7 +81,11 @@ function SelectValue(): JSX.Element {
   return <>{selectedLabel}</>
 }
 
-function SelectContent({ children, className, ...props }: React.ComponentProps<'div'>): JSX.Element | null {
+function SelectContent({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<'div'>): JSX.Element | null {
   const { open } = useSelect()
 
   if (!open) {

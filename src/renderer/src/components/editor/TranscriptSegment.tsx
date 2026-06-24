@@ -1,18 +1,20 @@
 import React from 'react'
 import { User, Edit3, Check, Copy } from 'lucide-react'
+import { captions } from '@/captions'
 
+const speakerPanel = captions.studio.speakerPanel
 const SPEAKER_COLORS = {
-  'Speaker 1': {
+  [speakerPanel.speakers[0].speaker]: {
     badge: 'bg-chart-1/10 text-chart-1 border-chart-1/20',
     dot: 'bg-chart-1',
     bar: 'bg-chart-1'
   },
-  'Speaker 2': {
+  [speakerPanel.speakers[1].speaker]: {
     badge: 'bg-primary/10 text-primary border-primary/20',
     dot: 'bg-primary',
     bar: 'bg-primary'
   },
-  'Speaker 3': {
+  [speakerPanel.speakers[2].speaker]: {
     badge: 'bg-chart-2/10 text-chart-2 border-chart-2/20',
     dot: 'bg-chart-2',
     bar: 'bg-chart-2'
@@ -22,7 +24,7 @@ const SPEAKER_COLORS = {
 export default function TranscriptSegment({ seg, isActive, searchQuery, onActivate, onTimeClick }) {
   const [editing, setEditing] = React.useState(false)
   const [text, setText] = React.useState(seg.text)
-  const colors = SPEAKER_COLORS[seg.speaker] || SPEAKER_COLORS['Speaker 1']
+  const colors = SPEAKER_COLORS[seg.speaker] || SPEAKER_COLORS[speakerPanel.speakers[0].speaker]
 
   const renderText = (content) => {
     if (!searchQuery) return content

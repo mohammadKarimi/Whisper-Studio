@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
 
 permissions:
   contents: write
@@ -38,5 +38,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: whisperx-${{ matrix.os }}
+          name: whisperstudio-${{ matrix.os }}
           path: release/**

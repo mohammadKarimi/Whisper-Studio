@@ -1,4 +1,4 @@
-# WhisperX Desktop
+# Whisper Studio
 
 An open-source desktop boilerplate built with Electron, React, TypeScript, and Vite. The structure is designed for a VS Code-style product: native app responsibilities stay in Electron, UI work stays in React, and shared contracts keep IPC predictable.
 
@@ -51,7 +51,7 @@ npx shadcn@latest add card
 The `@/*` alias points to `src/renderer/src/*`, so imports look like:
 
 ```ts
-import { Button } from "@/components/ui/button"
+import { Button } from '@/components/ui/button'
 ```
 
 ## Project Layout

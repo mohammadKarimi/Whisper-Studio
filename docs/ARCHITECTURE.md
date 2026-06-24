@@ -1,6 +1,6 @@
 # Architecture
 
-WhisperX Desktop uses a process-first architecture. Each runtime has a clear job and communicates through typed contracts.
+Whisper Studio Desktop uses a process-first architecture. Each runtime has a clear job and communicates through typed contracts.
 
 ## Main Process
 

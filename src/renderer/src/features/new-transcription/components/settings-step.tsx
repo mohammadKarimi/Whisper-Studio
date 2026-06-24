@@ -21,65 +21,11 @@ import {
   Waves
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { captions } from '@/captions'
 
-const MODELS = [
-  {
-    value: 'tiny',
-    label: 'Tiny',
-    speed: '~75x',
-    accuracy: 'Lower',
-    vram: '1 GB',
-    desc: 'Fastest, good for drafts'
-  },
-  {
-    value: 'base',
-    label: 'Base',
-    speed: '~50x',
-    accuracy: 'Fair',
-    vram: '1 GB',
-    desc: 'Quick transcriptions'
-  },
-  {
-    value: 'small',
-    label: 'Small',
-    speed: '~32x',
-    accuracy: 'Good',
-    vram: '2 GB',
-    desc: 'Balanced choice'
-  },
-  {
-    value: 'medium',
-    label: 'Medium',
-    speed: '~16x',
-    accuracy: 'High',
-    vram: '5 GB',
-    desc: 'Professional quality'
-  },
-  {
-    value: 'large-v3',
-    label: 'Large-v3',
-    speed: '~8x',
-    accuracy: 'Best',
-    vram: '10 GB',
-    desc: 'Maximum accuracy',
-    recommended: true
-  }
-]
-
-const LANGUAGES = [
-  { value: 'auto', label: 'Auto-detect' },
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'it', label: 'Italian' },
-  { value: 'ru', label: 'Russian' },
-  { value: 'ar', label: 'Arabic' }
-]
+const MODELS = captions.newTranscription.settings.models
+const LANGUAGES = captions.newTranscription.settings.languages
+const settingRows = captions.newTranscription.settings.rows
 
 export interface TranscriptionSettings {
   compute: string
@@ -154,8 +100,10 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
       <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/5 border border-primary/10">
         <Star className="w-4 h-4 text-primary shrink-0 text-warning" />
         <p className="text-[12px] text-muted-foreground">
-          <span className="text-foreground font-medium">Recommended settings applied.</span>{' '}
-          Large-v3 model with GPU for maximum accuracy. Estimated speed: ~8x real-time.
+          <span className="text-foreground font-medium">
+            {captions.newTranscription.settings.recommendedBanner.emphasis}
+          </span>{' '}
+          {captions.newTranscription.settings.recommendedBanner.detail}
         </p>
       </div>
 
@@ -164,9 +112,9 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
         <div className="px-5">
           <SettingRow
             icon={Globe}
-            label="Language"
-            description="Source audio language"
-            tooltip="Auto-detect works well for most languages. Select manually for better accuracy."
+            label={settingRows.language.label}
+            description={settingRows.language.description}
+            tooltip={settingRows.language.tooltip}
           >
             <Select value={settings.language} onValueChange={(v) => update('language', v)}>
               <SelectTrigger className="w-[180px] h-9 text-[13px]">
@@ -186,9 +134,9 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
         <div className="px-5">
           <SettingRow
             icon={Brain}
-            label="Model"
-            description="Accuracy vs speed tradeoff"
-            tooltip="Larger models are more accurate but slower. Large-v3 is recommended for professional use."
+            label={settingRows.model.label}
+            description={settingRows.model.description}
+            tooltip={settingRows.model.tooltip}
           >
             <Select value={settings.model} onValueChange={(v) => update('model', v)}>
               <SelectTrigger className="w-[180px] h-9 text-[13px]">
@@ -201,7 +149,7 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
                       {m.label}
                       {m.recommended && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                          Recommended
+                          {captions.newTranscription.settings.recommendedBadge}
                         </span>
                       )}
                     </div>
@@ -222,25 +170,25 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
                   <>
                     <div>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-                        Speed
+                        {captions.newTranscription.settings.modelDetails.speed}
                       </span>
                       <span className="text-[13px] font-mono font-medium">{m.speed}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-                        Accuracy
+                        {captions.newTranscription.settings.modelDetails.accuracy}
                       </span>
                       <span className="text-[13px] font-medium">{m.accuracy}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-                        VRAM
+                        {captions.newTranscription.settings.modelDetails.vram}
                       </span>
                       <span className="text-[13px] font-mono font-medium">{m.vram}</span>
                     </div>
                     <div>
                       <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-                        Note
+                        {captions.newTranscription.settings.modelDetails.note}
                       </span>
                       <span className="text-[12px] text-muted-foreground">{m.desc}</span>
                     </div>
@@ -254,23 +202,23 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
         <div className="px-5">
           <SettingRow
             icon={Cpu}
-            label="Compute"
-            description="Processing hardware"
-            tooltip="GPU is significantly faster. Falls back to CPU if no compatible GPU is found."
+            label={settingRows.compute.label}
+            description={settingRows.compute.description}
+            tooltip={settingRows.compute.tooltip}
           >
             <div className="flex items-center gap-2 p-1 rounded-lg bg-secondary">
-              {['cpu', 'gpu'].map((mode) => (
+              {captions.newTranscription.settings.computeModes.map((mode) => (
                 <button
-                  key={mode}
-                  onClick={() => update('compute', mode)}
+                  key={mode.value}
+                  onClick={() => update('compute', mode.value)}
                   className={`px-4 py-1.5 rounded-md text-[12px] font-medium transition-all
                     ${
-                      settings.compute === mode
+                      settings.compute === mode.value
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
-                  {mode.toUpperCase()}
+                  {mode.label}
                 </button>
               ))}
             </div>
@@ -283,9 +231,9 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
         <div className="px-5">
           <SettingRow
             icon={Zap}
-            label="Word Timestamps"
-            description="Precise timing for each word"
-            tooltip="Enables word-level timing data, useful for subtitle editing."
+            label={settingRows.wordTimestamps.label}
+            description={settingRows.wordTimestamps.description}
+            tooltip={settingRows.wordTimestamps.tooltip}
           >
             <Switch
               checked={settings.wordTimestamps}
@@ -296,9 +244,9 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
         <div className="px-5">
           <SettingRow
             icon={Users}
-            label="Speaker Diarization"
-            description="Identify who's speaking"
-            tooltip="Automatically labels different speakers. Works best with 2–6 speakers."
+            label={settingRows.diarization.label}
+            description={settingRows.diarization.description}
+            tooltip={settingRows.diarization.tooltip}
           >
             <Switch
               checked={settings.diarization}
@@ -314,15 +262,15 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
           <ChevronDown
             className={`w-4 h-4 transition-transform ${advancedOpen ? 'rotate-0' : '-rotate-90'}`}
           />
-          Advanced Settings
+          {captions.newTranscription.settings.advancedSettings}
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-3">
           <div className="glass-panel rounded-xl divide-y divide-border/50">
             <div className="px-5">
               <SettingRow
                 icon={Globe}
-                label="Translate to English"
-                description="Translate non-English audio to English"
+                label={settingRows.translate.label}
+                description={settingRows.translate.description}
               >
                 <Switch
                   checked={settings.translate}
@@ -333,8 +281,8 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
             <div className="px-5">
               <SettingRow
                 icon={Volume2}
-                label="Remove Silence"
-                description="Strip silent segments from output"
+                label={settingRows.removeSilence.label}
+                description={settingRows.removeSilence.description}
               >
                 <Switch
                   checked={settings.removeSilence}
@@ -345,8 +293,8 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
             <div className="px-5">
               <SettingRow
                 icon={Waves}
-                label="Noise Reduction"
-                description="Pre-process audio to reduce background noise"
+                label={settingRows.noiseReduction.label}
+                description={settingRows.noiseReduction.description}
               >
                 <Switch
                   checked={settings.noiseReduction}

@@ -10,39 +10,21 @@ import {
   LayoutTemplate,
   FolderOpen
 } from 'lucide-react'
+import { captions } from '@/captions'
 
-const FORMATS = [
-  {
-    value: 'txt',
-    label: 'Plain Text',
-    ext: '.txt',
-    icon: FileText,
-    desc: 'Simple text transcript'
-  },
-  {
-    value: 'srt',
-    label: 'SRT Subtitles',
-    ext: '.srt',
-    icon: Subtitles,
-    desc: 'Standard subtitle format'
-  },
-  { value: 'vtt', label: 'WebVTT', ext: '.vtt', icon: Globe, desc: 'Web-compatible subtitles' },
-  { value: 'json', label: 'JSON', ext: '.json', icon: Code, desc: 'Structured data with metadata' },
-  {
-    value: 'md',
-    label: 'Markdown',
-    ext: '.md',
-    icon: FileCode,
-    desc: 'Formatted text with headers'
-  },
-  {
-    value: 'html',
-    label: 'HTML',
-    ext: '.html',
-    icon: LayoutTemplate,
-    desc: 'Styled web page output'
-  }
-]
+const FORMAT_ICONS = {
+  txt: FileText,
+  srt: Subtitles,
+  vtt: Globe,
+  json: Code,
+  md: FileCode,
+  html: LayoutTemplate
+}
+
+const FORMATS = captions.newTranscription.output.formats.map((format) => ({
+  ...format,
+  icon: FORMAT_ICONS[format.value]
+}))
 
 interface StepOutputProps {
   exportMode: string
@@ -67,8 +49,10 @@ export default function StepOutput({
     <div className="space-y-6">
       {/* Output Formats */}
       <div>
-        <h3 className="text-sm font-semibold mb-1">Output Formats</h3>
-        <p className="text-xs text-muted-foreground mb-4">Select one or more export formats</p>
+        <h3 className="text-sm font-semibold mb-1">{captions.newTranscription.output.title}</h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          {captions.newTranscription.output.description}
+        </p>
         <div className="grid grid-cols-3 gap-3">
           {FORMATS.map((format) => {
             const isSelected = outputFormats.includes(format.value)
@@ -106,12 +90,16 @@ export default function StepOutput({
 
       {/* Output Path */}
       <div>
-        <h3 className="text-sm font-semibold mb-1">Output Folder</h3>
-        <p className="text-xs text-muted-foreground mb-3">Where to save exported files</p>
+        <h3 className="text-sm font-semibold mb-1">
+          {captions.newTranscription.output.outputFolder.title}
+        </h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          {captions.newTranscription.output.outputFolder.description}
+        </p>
         <button className="flex items-center gap-3 w-full p-3 rounded-xl border border-border/50 bg-card/50 hover:bg-secondary/30 transition-all text-left">
           <FolderOpen className="w-4 h-4 text-muted-foreground" />
           <span className="text-[13px] font-mono text-muted-foreground">
-            ~/Documents/Whisper Studio/exports
+            {captions.newTranscription.output.outputFolder.path}
           </span>
         </button>
       </div>
@@ -121,21 +109,27 @@ export default function StepOutput({
         <div className="grid grid-cols-3 gap-4">
           <div>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-              Estimated Time
+              {captions.newTranscription.output.estimated.timeLabel}
             </span>
-            <span className="text-lg font-semibold font-mono">~21 min</span>
+            <span className="text-lg font-semibold font-mono">
+              {captions.newTranscription.output.estimated.timeValue}
+            </span>
           </div>
           <div>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-              Model
+              {captions.newTranscription.output.estimated.modelLabel}
             </span>
-            <span className="text-[13px] font-medium">Large-v3</span>
+            <span className="text-[13px] font-medium">
+              {captions.newTranscription.output.estimated.modelValue}
+            </span>
           </div>
           <div>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
-              Output Files
+              {captions.newTranscription.output.estimated.outputFilesLabel}
             </span>
-            <span className="text-[13px] font-medium">{outputFormats.length * 2} files</span>
+            <span className="text-[13px] font-medium">
+              {outputFormats.length * 2} {captions.newTranscription.output.estimated.filesSuffix}
+            </span>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import * as React from 'react'
 
+import { captions } from '@/captions'
 import { cn } from '@/lib/utils'
 
 interface TabsContextValue {
@@ -23,7 +24,7 @@ function useTabs(): TabsContextValue {
   const context = React.useContext(TabsContext)
 
   if (!context) {
-    throw new Error('Tabs components must be used inside Tabs')
+    throw new Error(captions.errors.tabsContext)
   }
 
   return context

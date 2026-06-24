@@ -1,8 +1,8 @@
 {
-  "name": "whisperx-desktop",
+  "name": "whisper-studio",
   "version": "0.1.0",
-  "description": "Open-source Electron, React, and TypeScript desktop boilerplate for WhisperX.",
-  "author": "WhisperX Contributors",
+  "description": "Open-source Electron, React, and TypeScript desktop boilerplate for WhisperStudio.",
+  "author": "WhisperStudio Contributors",
   "license": "MIT",
   "private": false,
   "main": "./out/main/index.js",
@@ -53,9 +53,9 @@
     "vite": "^5.4.11"
   },
   "build": {
-    "appId": "dev.whisperx.desktop",
-    "productName": "WhisperX",
-    "copyright": "Copyright © 2026 WhisperX Contributors",
+    "appId": "dev.whisperstudio.desktop",
+    "productName": "WhisperStudio",
+    "copyright": "Copyright © 2026 WhisperStudio Contributors",
     "directories": {
       "output": "release",
       "buildResources": "resources"

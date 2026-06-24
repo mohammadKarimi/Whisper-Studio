@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react'
 import { AppWindow, Maximize2, Minimize2, Minus, X } from 'lucide-react'
 import type { DesktopPlatform } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
+import { captions } from '@/captions'
 import { cn } from '@/lib/utils'
 
 interface TitleBarProps {
@@ -49,7 +50,7 @@ export function TitleBar({
 
       <div className="hidden items-center gap-1.5 text-[11px] text-muted-foreground/50 md:flex">
         <span className="rounded bg-secondary/40 px-2 py-0.5 font-mono">
-          Transcription Workspace
+          {captions.titleBar.workspace}
         </span>
       </div>
 
@@ -57,7 +58,7 @@ export function TitleBar({
 
       <div
         className="grid h-full grid-cols-[repeat(3,2.875rem)] [-webkit-app-region:no-drag]"
-        aria-label="Window controls"
+        aria-label={captions.titleBar.windowControls}
       >
         <Button
           type="button"
@@ -65,7 +66,7 @@ export function TitleBar({
           size="icon"
           className={windowButtonClass}
           onClick={(event) => runWindowAction(event, onMinimize)}
-          title="Minimize"
+          title={captions.titleBar.minimize}
         >
           <Minus className="size-4" />
         </Button>
@@ -75,7 +76,7 @@ export function TitleBar({
           size="icon"
           className={windowButtonClass}
           onClick={(event) => runWindowAction(event, onMaximize)}
-          title={isMaximized ? 'Restore' : 'Maximize'}
+          title={isMaximized ? captions.titleBar.restore : captions.titleBar.maximize}
         >
           {isMaximized ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
         </Button>
@@ -85,7 +86,7 @@ export function TitleBar({
           size="icon"
           className={cn(windowButtonClass, 'hover:bg-destructive hover:text-white')}
           onClick={(event) => runWindowAction(event, onClose)}
-          title="Close"
+          title={captions.titleBar.close}
         >
           <X className="size-4" />
         </Button>

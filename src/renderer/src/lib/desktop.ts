@@ -16,7 +16,7 @@ function detectBrowserPlatform(): DesktopPlatform {
 
 const browserDesktopApi: DesktopApi = {
   getAppInfo: async (): Promise<AppInfo> => ({
-    name: 'WhisperX',
+    name: 'Whisper Studio',
     version: '0.1.0',
     electron: 'browser',
     chrome: 'browser',
@@ -31,7 +31,6 @@ const browserDesktopApi: DesktopApi = {
     stderr: 'Whisper transcription is available in the Electron desktop app.'
   }),
   onWhisperOutput: () => () => undefined,
-  onWhisperProgress: () => () => undefined,
   windowControls: {
     isMaximized: async () => false,
     minimize: async () => undefined,

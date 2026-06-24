@@ -1,20 +1,22 @@
 import { Clock, Gauge, Hash, TrendingUp } from 'lucide-react'
+import { captions } from '@/captions'
 
-const SPEAKERS = [
-  { name: 'Sarah Chen', speaker: 'Speaker 1', segments: 3, color: 'bg-chart-1' },
-  { name: 'Michael Torres', speaker: 'Speaker 2', segments: 3, color: 'bg-primary' },
-  { name: 'Lisa Wang', speaker: 'Speaker 3', segments: 2, color: 'bg-chart-2' }
-]
+const speakerColors = ['bg-chart-1', 'bg-primary', 'bg-chart-2']
+
+const SPEAKERS = captions.studio.speakerPanel.speakers.map((speaker, index) => ({
+  ...speaker,
+  color: speakerColors[index]
+}))
 
 interface SpeakerPanelProps {
   activeSpeaker: string | null
   onSelectSpeaker: (speaker: string | null) => void
 }
 const STATS = [
-  { icon: Hash, label: 'Word Count', value: '2,847' },
-  { icon: Clock, label: 'Duration', value: '1h 23m' },
-  { icon: Gauge, label: 'Confidence', value: '96.4%' },
-  { icon: TrendingUp, label: 'WPM', value: '142' }
+  { icon: Hash, ...captions.studio.speakerPanel.stats[0] },
+  { icon: Clock, ...captions.studio.speakerPanel.stats[1] },
+  { icon: Gauge, ...captions.studio.speakerPanel.stats[2] },
+  { icon: TrendingUp, ...captions.studio.speakerPanel.stats[3] }
 ]
 
 export default function SpeakerPanel({
@@ -25,14 +27,14 @@ export default function SpeakerPanel({
     <aside className="w-[300px] border-l border-border/50 bg-card/30 p-4 shrink-0 overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Speakers
+          {captions.studio.speakerPanel.headings.speakers}
         </h3>
         {activeSpeaker && (
           <button
             onClick={() => onSelectSpeaker(null)}
             className="text-[10px] text-primary hover:text-foreground transition-colors"
           >
-            Clear
+            {captions.studio.speakerPanel.clear}
           </button>
         )}
       </div>
@@ -54,13 +56,15 @@ export default function SpeakerPanel({
                 <span className={`w-2 h-2 rounded-full ${speaker.color}`} />
                 <span className="text-[12px] font-medium text-foreground">{speaker.name}</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">{speaker.segments} segments</p>
+              <p className="text-[10px] text-muted-foreground">
+                {speaker.segments} {captions.studio.speakerPanel.segmentsLabel}
+              </p>
             </button>
           )
         })}
       </div>
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-6">
-        Statistics
+        {captions.studio.speakerPanel.headings.statistics}
       </h3>
       <div className="">
         <div className="grid grid-cols-2 gap-2">
@@ -78,14 +82,18 @@ export default function SpeakerPanel({
       </div>
       {/* Quality */}{' '}
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-6">
-        Quality
+        {captions.studio.speakerPanel.headings.quality}
       </h3>
       <div className="">
         <div className="space-y-2.5">
           <div>
             <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground">Accuracy</span>
-              <span className="font-mono text-foreground">96%</span>
+              <span className="text-muted-foreground">
+                {captions.studio.speakerPanel.quality[0].label}
+              </span>
+              <span className="font-mono text-foreground">
+                {captions.studio.speakerPanel.quality[0].value}
+              </span>
             </div>
             <div className="h-1 bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-success rounded-full" style={{ width: '96%' }} />
@@ -93,8 +101,12 @@ export default function SpeakerPanel({
           </div>
           <div>
             <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground">Clarity</span>
-              <span className="font-mono text-foreground">89%</span>
+              <span className="text-muted-foreground">
+                {captions.studio.speakerPanel.quality[1].label}
+              </span>
+              <span className="font-mono text-foreground">
+                {captions.studio.speakerPanel.quality[1].value}
+              </span>
             </div>
             <div className="h-1 bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full" style={{ width: '89%' }} />
@@ -102,8 +114,12 @@ export default function SpeakerPanel({
           </div>
           <div>
             <div className="flex justify-between text-[10px] mb-1">
-              <span className="text-muted-foreground">Noise</span>
-              <span className="font-mono text-foreground">Low</span>
+              <span className="text-muted-foreground">
+                {captions.studio.speakerPanel.quality[2].label}
+              </span>
+              <span className="font-mono text-foreground">
+                {captions.studio.speakerPanel.quality[2].value}
+              </span>
             </div>
             <div className="h-1 bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-warning rounded-full" style={{ width: '22%' }} />

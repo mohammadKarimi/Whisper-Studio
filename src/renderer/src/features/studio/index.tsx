@@ -3,6 +3,7 @@ import { Link } from '@/app/navigation'
 import { motion } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { captions } from '@/captions'
 import {
   Search,
   Replace,
@@ -19,72 +20,7 @@ import AudioPlayer from '@/components/editor/AudioPlayer'
 import SpeakerPanel from '@/components/editor/SpeakerPanel'
 import TranscriptSegment from '@/components/editor/TranscriptSegment'
 
-const TRANSCRIPT = [
-  {
-    id: 1,
-    speaker: 'Speaker 1',
-    name: 'Sarah Chen',
-    time: '00:00:00',
-    endTime: '00:00:15',
-    text: "Good morning everyone. Thank you for joining today's product strategy meeting. We have a lot to cover, so let's get started right away."
-  },
-  {
-    id: 2,
-    speaker: 'Speaker 2',
-    name: 'Michael Torres',
-    time: '00:00:15',
-    endTime: '00:00:32',
-    text: "Thanks Sarah. I'd like to start by reviewing our Q3 metrics. Overall, we saw a 23% increase in user engagement, which exceeded our target of 18%."
-  },
-  {
-    id: 3,
-    speaker: 'Speaker 1',
-    name: 'Sarah Chen',
-    time: '00:00:32',
-    endTime: '00:00:48',
-    text: "That's excellent. Can you break down which features drove the most engagement? I'm particularly interested in the AI-powered suggestions we launched in August."
-  },
-  {
-    id: 4,
-    speaker: 'Speaker 2',
-    name: 'Michael Torres',
-    time: '00:00:48',
-    endTime: '00:01:12',
-    text: 'Absolutely. The AI suggestions feature had the highest adoption rate at 67% of active users. The real-time collaboration tools came in second at 45%. We also saw significant growth in our mobile usage, up 31% quarter over quarter.'
-  },
-  {
-    id: 5,
-    speaker: 'Speaker 3',
-    name: 'Lisa Wang',
-    time: '00:01:12',
-    endTime: '00:01:35',
-    text: 'I want to add some context from the user research side. We conducted 42 user interviews last quarter, and the feedback has been overwhelmingly positive. The main request is better integration with existing workflows, which aligns with our Q4 roadmap.'
-  },
-  {
-    id: 6,
-    speaker: 'Speaker 1',
-    name: 'Sarah Chen',
-    time: '00:01:35',
-    endTime: '00:01:52',
-    text: "Perfect. Let's talk about Q4 priorities then. I've outlined three key initiatives that I believe will position us well for next year. First, expanding our API ecosystem."
-  },
-  {
-    id: 7,
-    speaker: 'Speaker 2',
-    name: 'Michael Torres',
-    time: '00:01:52',
-    endTime: '00:02:15',
-    text: "The API expansion is critical. We've had over 200 requests from enterprise customers for deeper integrations. I'd suggest we prioritize the webhook system and the batch processing endpoints."
-  },
-  {
-    id: 8,
-    speaker: 'Speaker 3',
-    name: 'Lisa Wang',
-    time: '00:02:15',
-    endTime: '00:02:38',
-    text: "From a design perspective, we need to ensure the developer experience is world-class. I'd recommend we invest in comprehensive documentation and interactive playground environments."
-  }
-]
+const TRANSCRIPT = captions.studio.transcript
 
 export default function Studio() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -93,7 +29,7 @@ export default function Studio() {
   const [activeSegment, setActiveSegment] = useState(1)
   const [activeSpeaker, setActiveSpeaker] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState('00:00:32')
+  const [currentTime, setCurrentTime] = useState(captions.studio.defaultCurrentTime)
 
   const filteredTranscript = useMemo(
     () =>
@@ -123,36 +59,38 @@ export default function Studio() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-[15px] font-semibold truncate">Product Strategy Meeting Q4</h1>
+                <h1 className="text-[15px] font-semibold truncate">
+                  {captions.studio.header.title}
+                </h1>
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-success/10 text-success text-[10px] font-medium">
-                  <Check className="w-2.5 h-2.5" /> Transcribed
+                  <Check className="w-2.5 h-2.5" /> {captions.studio.header.status}
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> 1h 23m
+                  <Clock className="w-3 h-3" /> {captions.studio.header.duration}
                 </span>
-                <span className="text-muted-foreground/30">·</span>
-                <span>3 speakers</span>
-                <span className="text-muted-foreground/30">·</span>
-                <span>Large-v3</span>
-                <span className="text-muted-foreground/30">·</span>
-                <span>96.4% confidence</span>
+                <span className="text-muted-foreground/30">{captions.studio.header.separator}</span>
+                <span>{captions.studio.header.speakers}</span>
+                <span className="text-muted-foreground/30">{captions.studio.header.separator}</span>
+                <span>{captions.studio.header.model}</span>
+                <span className="text-muted-foreground/30">{captions.studio.header.separator}</span>
+                <span>{captions.studio.header.confidence}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground">
-              <Languages className="w-3.5 h-3.5" /> EN
+              <Languages className="w-3.5 h-3.5" /> {captions.studio.actions.language}
             </Button>
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground">
-              <Tag className="w-3.5 h-3.5" /> Label
+              <Tag className="w-3.5 h-3.5" /> {captions.studio.actions.label}
             </Button>
 
             <Link to="/export">
               <Button size="sm" className="gap-1.5 text-xs">
-                <Download className="w-3.5 h-3.5" /> Export
+                <Download className="w-3.5 h-3.5" /> {captions.studio.actions.export}
               </Button>
             </Link>
           </div>
@@ -169,12 +107,12 @@ export default function Studio() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search transcript…"
+                placeholder={captions.studio.placeholders.search}
                 className="pl-9 h-8 text-[13px] bg-secondary/40 border-border/40"
               />
               {searchQuery && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-muted-foreground">
-                  {matchCount} matches
+                  {matchCount} {captions.studio.matchesLabel}
                 </span>
               )}
             </div>
@@ -184,11 +122,11 @@ export default function Studio() {
               onClick={() => setShowReplace(!showReplace)}
               className="text-xs text-muted-foreground gap-1"
             >
-              <Replace className="w-3.5 h-3.5" /> Replace
+              <Replace className="w-3.5 h-3.5" /> {captions.studio.actions.replace}
             </Button>
             <div className="flex-1" />
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1">
-              <MessageSquare className="w-3.5 h-3.5" /> Comments
+              <MessageSquare className="w-3.5 h-3.5" /> {captions.studio.actions.comments}
             </Button>
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1">
               <MoreHorizontal className="w-3.5 h-3.5" />
@@ -204,14 +142,14 @@ export default function Studio() {
               <Input
                 value={replaceText}
                 onChange={(e) => setReplaceText(e.target.value)}
-                placeholder="Replace with…"
+                placeholder={captions.studio.placeholders.replace}
                 className="flex-1 max-w-sm h-8 text-[13px] bg-secondary/40 border-border/40"
               />
               <Button variant="outline" size="sm" className="text-xs">
-                Replace
+                {captions.studio.actions.replace}
               </Button>
               <Button variant="outline" size="sm" className="text-xs">
-                Replace All
+                {captions.studio.actions.replaceAll}
               </Button>
             </motion.div>
           )}
@@ -221,7 +159,7 @@ export default function Studio() {
             <div className="mx-auto space-y-1">
               {filteredTranscript.length === 0 ? (
                 <div className="text-center py-20 text-muted-foreground text-sm">
-                  No segments match your filters.
+                  {captions.studio.emptyState}
                 </div>
               ) : (
                 filteredTranscript.map((seg) => (

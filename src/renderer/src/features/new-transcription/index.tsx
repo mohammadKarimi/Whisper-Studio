@@ -2,38 +2,28 @@ import { Fragment, useState } from 'react'
 import { useNavigate } from '@/app/navigation'
 import { motion, AnimatePresence } from '@/lib/motion'
 import { Button } from '@/components/ui/button'
+import { captions } from '@/captions'
 import StepFiles, { type TranscriptionFile } from './components/files-step'
 import StepSettings, { type TranscriptionSettings } from './components/settings-step'
 import StepOutput from './components/output-step'
 import Processing from './components/processing-step'
 import { ArrowLeft, ArrowRight, ChevronRight, Sparkles } from 'lucide-react'
 
-const STEPS = [
-  { id: 1, label: 'Select Files', description: 'Choose audio or video files' },
-  { id: 2, label: 'Settings', description: 'Configure transcription' },
-  { id: 3, label: 'Output', description: 'Format & export options' },
-  { id: 4, label: 'Processing', description: 'Transcribe selected files' }
-]
+const STEPS = captions.newTranscription.steps
 
 export default function NewTranscription() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
-  const [files, setFiles] = useState<TranscriptionFile[]>([
-    { name: 'board_meeting_2024_q4.mp4', size: '342 MB', duration: '2h 10m', type: 'video' },
-    { name: 'customer_interview_sarah.wav', size: '128 MB', duration: '42m 15s', type: 'audio' }
-  ])
+  const [files, setFiles] = useState<TranscriptionFile[]>(() =>
+    captions.newTranscription.initialFiles.map((file) => ({ ...file }))
+  )
   const [settings, setSettings] = useState<TranscriptionSettings>({
-    language: 'auto',
-    model: 'large-v3',
-    compute: 'gpu',
-    wordTimestamps: true,
-    diarization: true,
-    translate: false,
-    removeSilence: false,
-    noiseReduction: true
+    ...captions.newTranscription.initialSettings
   })
-  const [outputFormats, setOutputFormats] = useState<string[]>(['srt', 'txt'])
-  const [exportMode, setExportMode] = useState('single')
+  const [outputFormats, setOutputFormats] = useState<string[]>([
+    ...captions.newTranscription.initialOutputFormats
+  ])
+  const [exportMode, setExportMode] = useState(captions.newTranscription.initialExportMode)
 
   return (
     <div className="p-8 max-w-[900px] mx-auto">
@@ -46,9 +36,11 @@ export default function NewTranscription() {
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">New Transcription</h1>
+          <h1 className="text-xl font-semibold tracking-tight">
+            {captions.newTranscription.title}
+          </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure and start your transcription job
+            {captions.newTranscription.subtitle}
           </p>
         </div>
       </div>
@@ -72,7 +64,7 @@ export default function NewTranscription() {
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold
                 ${step === s.id ? 'bg-primary text-primary-foreground' : step > s.id ? 'bg-success text-white' : 'bg-secondary text-muted-foreground'}`}
               >
-                {step > s.id ? '✓' : s.id}
+                {step > s.id ? captions.newTranscription.completedStepMarker : s.id}
               </div>
               <div>
                 <p
@@ -113,29 +105,31 @@ export default function NewTranscription() {
 
       {/* Navigation */}
       {step < 4 && (
-      <div className="flex items-center justify-between mt-8 pt-6">
-        <Button
-          variant="ghost"
-          onClick={() => (step > 1 ? setStep(step - 1) : navigate('/'))}
-          className="gap-2 text-muted-foreground"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {step > 1 ? 'Back' : 'Cancel'}
-        </Button>
-        <div className="flex items-center gap-3">
-          {step < 3 && (
-            <Button onClick={() => setStep(step + 1)} className="gap-2">
-              Continue <ArrowRight className="w-4 h-4" />
-            </Button>
-          )}
-          {step === 3 && (
-            <Button onClick={() => setStep(4)} className="gap-2 glow-primary">
-              <Sparkles className="w-4 h-4" />
-              Start Transcription
-            </Button>
-          )}
+        <div className="flex items-center justify-between mt-8 pt-6">
+          <Button
+            variant="ghost"
+            onClick={() => (step > 1 ? setStep(step - 1) : navigate('/'))}
+            className="gap-2 text-muted-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {step > 1
+              ? captions.newTranscription.navigation.back
+              : captions.newTranscription.navigation.cancel}
+          </Button>
+          <div className="flex items-center gap-3">
+            {step < 3 && (
+              <Button onClick={() => setStep(step + 1)} className="gap-2">
+                {captions.newTranscription.navigation.continue} <ArrowRight className="w-4 h-4" />
+              </Button>
+            )}
+            {step === 3 && (
+              <Button onClick={() => setStep(4)} className="gap-2 glow-primary">
+                <Sparkles className="w-4 h-4" />
+                {captions.newTranscription.navigation.startTranscription}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
       )}
     </div>
   )

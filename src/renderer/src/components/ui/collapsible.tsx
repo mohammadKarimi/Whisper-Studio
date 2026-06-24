@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { captions } from '@/captions'
 
 interface CollapsibleContextValue {
   open: boolean
@@ -37,7 +38,7 @@ function useCollapsible(): CollapsibleContextValue {
   const context = React.useContext(CollapsibleContext)
 
   if (!context) {
-    throw new Error('Collapsible components must be used inside Collapsible')
+    throw new Error(captions.errors.collapsibleContext)
   }
 
   return context
@@ -68,7 +69,10 @@ function CollapsibleTrigger({
   )
 }
 
-function CollapsibleContent({ children, ...props }: React.ComponentProps<'div'>): JSX.Element | null {
+function CollapsibleContent({
+  children,
+  ...props
+}: React.ComponentProps<'div'>): JSX.Element | null {
   const { open } = useCollapsible()
 
   if (!open) {

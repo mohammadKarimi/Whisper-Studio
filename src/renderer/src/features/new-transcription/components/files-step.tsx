@@ -1,6 +1,7 @@
 import { useState, useCallback, type Dispatch, type DragEvent, type SetStateAction } from 'react'
 import { Upload, FileAudio, FileVideo, X, AlertTriangle, Clock, HardDrive } from 'lucide-react'
 import { motion } from '@/lib/motion'
+import { captions } from '@/captions'
 
 export interface TranscriptionFile {
   duration: string
@@ -26,8 +27,8 @@ export default function StepFiles({ files, setFiles }: StepFilesProps): JSX.Elem
     setFiles(files.filter((_, i) => i !== index))
   }
 
-  const totalDuration = '2h 52m 15s'
-  const totalSize = '470 MB'
+  const totalDuration = captions.newTranscription.files.summary.totalDurationValue
+  const totalSize = captions.newTranscription.files.summary.totalSizeValue
 
   return (
     <div className="space-y-6">
@@ -52,8 +53,12 @@ export default function StepFiles({ files, setFiles }: StepFilesProps): JSX.Elem
               className={`w-5 h-5 ${isDragOver ? 'text-primary' : 'text-muted-foreground'}`}
             />
           </div>
-          <p className="text-sm font-medium mb-1">Drop files here or click to browse</p>
-          <p className="text-xs text-muted-foreground">MP3, WAV, MP4, WEBM, M4A, FLAC, OGG, AAC</p>
+          <p className="text-sm font-medium mb-1">
+            {captions.newTranscription.files.dropZone.title}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {captions.newTranscription.files.dropZone.formats}
+          </p>
         </div>
       </div>
 
@@ -61,7 +66,7 @@ export default function StepFiles({ files, setFiles }: StepFilesProps): JSX.Elem
       {files.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Selected Files
+            {captions.newTranscription.files.selectedFiles}
           </h3>
           {files.map((file, i) => (
             <motion.div
@@ -92,7 +97,9 @@ export default function StepFiles({ files, setFiles }: StepFilesProps): JSX.Elem
               {file.size.includes('342') && (
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-warning/10 text-warning">
                   <AlertTriangle className="w-3 h-3" />
-                  <span className="text-[10px] font-medium">Large file</span>
+                  <span className="text-[10px] font-medium">
+                    {captions.newTranscription.files.largeFile}
+                  </span>
                 </div>
               )}
               <button
@@ -107,15 +114,21 @@ export default function StepFiles({ files, setFiles }: StepFilesProps): JSX.Elem
           {/* Summary */}
           <div className="flex items-center gap-6 px-4 pt-3">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground">Total Duration</span>
+              <span className="text-[11px] text-muted-foreground">
+                {captions.newTranscription.files.summary.totalDuration}
+              </span>
               <span className="text-[12px] font-mono font-medium">{totalDuration}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground">Total Size</span>
+              <span className="text-[11px] text-muted-foreground">
+                {captions.newTranscription.files.summary.totalSize}
+              </span>
               <span className="text-[12px] font-mono font-medium">{totalSize}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground">Files</span>
+              <span className="text-[11px] text-muted-foreground">
+                {captions.newTranscription.files.summary.files}
+              </span>
               <span className="text-[12px] font-mono font-medium">{files.length}</span>
             </div>
           </div>

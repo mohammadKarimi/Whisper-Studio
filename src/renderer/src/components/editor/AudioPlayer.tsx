@@ -1,10 +1,11 @@
 import { Play, Pause, Volume2, Repeat, Rewind, FastForward } from 'lucide-react'
+import { captions } from '@/captions'
 
 export default function AudioPlayer({
   isPlaying,
   onTogglePlay,
   currentTime,
-  duration = '01:23:45',
+  duration = captions.audioPlayer.defaultDuration,
   progress = 18
 }) {
   return (
@@ -71,7 +72,7 @@ export default function AudioPlayer({
             </div>
           </div>
           <button className="text-[11px] text-muted-foreground hover:text-foreground font-mono px-2.5 py-1 rounded-md bg-secondary/50 hover:bg-secondary transition-colors">
-            1.0x
+            {captions.audioPlayer.speed}
           </button>
           <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors">
             <Repeat className="w-3.5 h-3.5" />

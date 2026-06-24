@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve WhisperX Desktop.
+Thanks for helping improve Whisper Studio.
 
 ## Local Workflow
 

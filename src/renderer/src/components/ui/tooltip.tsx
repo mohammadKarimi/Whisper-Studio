@@ -1,5 +1,6 @@
 import * as React from 'react'
 
+import { captions } from '@/captions'
 import { cn } from '@/lib/utils'
 
 interface TooltipContextValue {
@@ -27,7 +28,7 @@ function useTooltip(): TooltipContextValue {
   const context = React.useContext(TooltipContext)
 
   if (!context) {
-    throw new Error('Tooltip components must be used inside Tooltip')
+    throw new Error(captions.errors.tooltipContext)
   }
 
   return context

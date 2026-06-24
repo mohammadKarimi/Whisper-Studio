@@ -44,28 +44,12 @@ export interface WhisperOutputChunk {
   text: string
 }
 
-export type WhisperProgressPhase =
-  | 'checking-command'
-  | 'checking-whisper'
-  | 'sending-command'
-  | 'waiting'
-  | 'transcribing'
-  | 'complete'
-  | 'error'
-
-export interface WhisperProgressUpdate {
-  phase: WhisperProgressPhase
-  message: string
-  state: 'active' | 'complete' | 'error'
-}
-
 export interface DesktopApi {
   getAppInfo: () => Promise<AppInfo>
   getPlatform: () => Promise<DesktopPlatform>
   selectWhisperFile: () => Promise<WhisperFileSelection>
   transcribeWithWhisper: (filePath: string) => Promise<WhisperTranscriptionResult>
   onWhisperOutput: (callback: (chunk: WhisperOutputChunk) => void) => () => void
-  onWhisperProgress: (callback: (update: WhisperProgressUpdate) => void) => () => void
   windowControls: {
     isMaximized: () => Promise<boolean>
     minimize: () => Promise<void>
