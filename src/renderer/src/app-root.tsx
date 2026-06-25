@@ -1,9 +1,9 @@
-import { AppRouteView } from './app/AppRouteView'
-import { useAppRoute } from './app/useAppRoute'
-import { useDesktopShell } from './app/useDesktopShell'
-import { AppSidebar } from './components/AppSidebar'
-import { SystemStatusBar } from './components/SystemStatusBar'
-import { TitleBar } from './components/TitleBar'
+import { AppRouteView } from './app/app-route-view'
+import { useAppRoute } from './app/use-app-route'
+import { useDesktopShell } from './app/use-desktop-shell'
+import { AppSidebar } from './components/app-sidebar'
+import { SystemStatusBar } from './components/system-status-bar'
+import { TitleBar } from './components/title-bar'
 import { captions } from './captions'
 
 export function App(): JSX.Element {

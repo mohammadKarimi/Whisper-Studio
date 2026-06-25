@@ -1,8 +1,8 @@
 {
-  "name": "whisper-studio",
+  "name": "Whisper Studio",
   "version": "0.1.0",
-  "description": "Open-source Electron, React, and TypeScript desktop boilerplate for WhisperStudio.",
-  "author": "WhisperStudio Contributors",
+  "description": "Open-source Electron, React, and TypeScript desktop boilerplate for Whisper Studio.",
+  "author": "Whisper Studio Contributors",
   "license": "MIT",
   "private": false,
   "main": "./out/main/index.js",

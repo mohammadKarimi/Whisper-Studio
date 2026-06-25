@@ -45,7 +45,7 @@ export default function Processing() {
       </div>
 
       {/* Current Job */}
-      <div className="glass-panel rounded-2xl p-6 mb-6">
+      <div className="glass-panel rounded-2xl p-6 mb-4">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
             <FileAudio className="w-5 h-5 text-primary" />
@@ -57,7 +57,7 @@ export default function Processing() {
         </div>
 
         {/* Progress */}
-        <div className="mb-6">
+        <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[13px] font-medium">
               {isComplete ? captions.processing.progress.complete : STAGES[currentStage]?.label}
@@ -82,7 +82,7 @@ export default function Processing() {
       </div>
 
       {/* Stages */}
-      <div className="glass-panel rounded-2xl p-6 mb-6">
+      <div className="glass-panel rounded-2xl p-6 mb-4">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           {captions.processing.stagesTitle}
         </h3>

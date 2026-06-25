@@ -16,9 +16,9 @@ import {
   FileAudio,
   Clock
 } from 'lucide-react'
-import AudioPlayer from '@/components/editor/AudioPlayer'
-import SpeakerPanel from '@/components/editor/SpeakerPanel'
-import TranscriptSegment from '@/components/editor/TranscriptSegment'
+import AudioPlayer from '@/components/studio/audio-player'
+import SpeakerPanel from '@/components/studio/speaker-panel'
+import TranscriptSegment from '@/components/studio/transcript-segment'
 
 const TRANSCRIPT = captions.studio.transcript
 

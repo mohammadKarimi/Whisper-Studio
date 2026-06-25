@@ -1,6 +1,6 @@
 export const captions = {
   app: {
-    defaultName: 'Whisper Desktop'
+    defaultName: 'Whisper Studio'
   },
   titleBar: {
     workspace: 'Transcription Workspace',
@@ -37,13 +37,13 @@ export const captions = {
     ]
   },
   routes: {
-    overview: {
-      title: 'Overview',
+    dashboard: {
+      title: 'Dashboard',
       placeholder: 'This page is ready for a feature.'
     }
   },
   settingsPage: {
-    title: 'settings'
+    title: 'Settings'
   },
   studio: {
     transcript: [
