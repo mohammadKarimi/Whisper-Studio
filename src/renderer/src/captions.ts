@@ -72,15 +72,20 @@ export const captions = {
         suffix: 'dependencies installed'
       },
       actions: {
-        checkAll: 'Check all'
+        checkAll: 'Check all',
+        install: 'Install',
+        installing: 'Installing',
+        openInstaller: 'Open installer'
       },
       status: {
         ok: 'Installed',
         missing: 'Not installed',
-        checking: 'Checking'
+        checking: 'Checking',
+        installing: 'Installing'
       },
       versionPrefix: 'v',
       requiredPrefix: 'needs v',
+      installFailed: 'Install failed',
       items: [
         {
           id: 'python',

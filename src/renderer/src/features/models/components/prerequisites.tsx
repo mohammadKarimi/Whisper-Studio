@@ -9,7 +9,9 @@ import {
   Code2,
   Video,
   Zap,
-  Package
+  Package,
+  Download,
+  ExternalLink
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { DesktopApi, PrerequisiteCheckStatus } from '@shared/ipc'
@@ -20,12 +22,14 @@ import { captions } from '@/captions'
 const prerequisitesCaptions = captions.models.prerequisites
 type PrerequisiteId = (typeof prerequisitesCaptions.items)[number]['id']
 type PrerequisiteStatus = PrerequisiteCheckStatus | 'checking'
+type PrerequisiteUiStatus = PrerequisiteStatus | 'installing'
 type PrerequisiteItem = {
+  error: string | null
   id: PrerequisiteId
   name: string
   required: string
   installed: string | null
-  status: PrerequisiteStatus
+  status: PrerequisiteUiStatus
   desc: string
 }
 
@@ -41,6 +45,7 @@ const prerequisiteIcons: Record<PrerequisiteId, LucideIcon> = {
   ctranslate2: Zap,
   torch: Terminal
 }
+const externalInstallerIds = new Set<PrerequisiteId>(['python', 'ffmpeg', 'cuda'])
 
 const statusConfig = {
   ok: {
@@ -60,25 +65,34 @@ const statusConfig = {
     color: 'text-primary',
     bg: 'bg-primary/10',
     label: prerequisitesCaptions.status.checking
+  },
+  installing: {
+    icon: Loader2,
+    color: 'text-primary',
+    bg: 'bg-primary/10',
+    label: prerequisitesCaptions.status.installing
   }
 } satisfies Record<
-  PrerequisiteStatus,
+  PrerequisiteUiStatus,
   { icon: LucideIcon; color: string; bg: string; label: string }
 >
 
 const initialItems = prerequisitesCaptions.items.map((item) => ({
   ...item,
+  error: null,
   installed: null,
   status: 'checking'
 })) satisfies PrerequisiteItem[]
 
 export default function Prerequisites({ desktop }: PrerequisitesProps) {
-  const [items, setItems] = useState<PrerequisiteItem[]>(() => initialItems.map((item) => ({ ...item })))
+  const [items, setItems] = useState<PrerequisiteItem[]>(() =>
+    initialItems.map((item) => ({ ...item }))
+  )
   const [isChecking, setIsChecking] = useState(true)
 
   const refreshPrerequisites = useCallback(async (): Promise<void> => {
     setIsChecking(true)
-    setItems((prev) => prev.map((item) => ({ ...item, status: 'checking' })))
+    setItems((prev) => prev.map((item) => ({ ...item, error: null, status: 'checking' })))
 
     try {
       const checks = await desktop.getPrerequisites()
@@ -89,6 +103,7 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
 
           return {
             ...item,
+            error: null,
             installed: check?.installed ?? null,
             status: check?.status ?? 'missing'
           }
@@ -99,11 +114,43 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
     }
   }, [desktop])
 
+  const handleInstall = useCallback(
+    async (id: PrerequisiteId): Promise<void> => {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, error: null, status: 'installing' } : item
+        )
+      )
+
+      const result = await desktop.installPrerequisite(id)
+
+      if (result.ok && result.action === 'installed') {
+        await refreshPrerequisites()
+        return
+      }
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                error: result.ok ? null : result.stderr || prerequisitesCaptions.installFailed,
+                status: 'missing'
+              }
+            : item
+        )
+      )
+    },
+    [desktop, refreshPrerequisites]
+  )
+
   useEffect(() => {
     void refreshPrerequisites()
   }, [refreshPrerequisites])
 
   const installedCount = items.filter((p) => p.status === 'ok').length
+  const isInstalling = items.some((item) => item.status === 'installing')
+  const isBusy = isChecking || isInstalling
 
   return (
     <div>
@@ -119,10 +166,10 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
           variant="ghost"
           size="sm"
           onClick={() => void refreshPrerequisites()}
-          disabled={isChecking}
+          disabled={isBusy}
           className="gap-1.5 text-xs text-muted-foreground"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} />{' '}
+          <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />{' '}
           {prerequisitesCaptions.actions.checkAll}
         </Button>
       </div>
@@ -132,6 +179,11 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
           const cfg = statusConfig[item.status]
           const StatusIcon = cfg.icon
           const ItemIcon = prerequisiteIcons[item.id]
+          const isExternalInstaller = externalInstallerIds.has(item.id)
+          const ActionIcon = isExternalInstaller ? ExternalLink : Download
+          const actionLabel = isExternalInstaller
+            ? prerequisitesCaptions.actions.openInstaller
+            : prerequisitesCaptions.actions.install
           return (
             <motion.div
               key={item.id}
@@ -160,7 +212,11 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
                 <div className="flex items-center gap-2">
                   <span className={`flex items-center gap-1 text-[11px] font-medium ${cfg.color}`}>
                     <StatusIcon
-                      className={`w-3 h-3 ${item.status === 'checking' ? 'animate-spin' : ''}`}
+                      className={`w-3 h-3 ${
+                        item.status === 'checking' || item.status === 'installing'
+                          ? 'animate-spin'
+                          : ''
+                      }`}
                     />
                     {cfg.label}
                   </span>
@@ -180,6 +236,28 @@ export default function Prerequisites({ desktop }: PrerequisitesProps) {
                 </div>
               </div>
 
+              {item.error && (
+                <p className="mt-2 text-[11px] leading-snug text-destructive">{item.error}</p>
+              )}
+
+              {(item.status === 'missing' || item.status === 'installing') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleInstall(item.id)}
+                  disabled={isBusy}
+                  className="mt-3 h-7 w-full gap-1.5 text-xs"
+                >
+                  {item.status === 'installing' ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <ActionIcon className="w-3 h-3" />
+                  )}
+                  {item.status === 'installing'
+                    ? prerequisitesCaptions.actions.installing
+                    : actionLabel}
+                </Button>
+              )}
             </motion.div>
           )
         })}

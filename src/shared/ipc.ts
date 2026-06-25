@@ -3,6 +3,7 @@ export const IPC_CHANNELS = {
   platform: 'system:platform',
   systemStatus: 'system:status',
   prerequisites: 'system:prerequisites',
+  prerequisiteInstall: 'system:prerequisite-install',
   windowIsMaximized: 'window:is-maximized',
   windowStateChanged: 'window:state-changed',
   windowMinimize: 'window:minimize',
@@ -54,6 +55,17 @@ export interface PrerequisiteCheck {
   status: PrerequisiteCheckStatus
 }
 
+export type PrerequisiteInstallAction = 'installed' | 'opened'
+
+export interface PrerequisiteInstallResult {
+  action: PrerequisiteInstallAction
+  command?: string
+  id: PrerequisiteCheckId
+  ok: boolean
+  stderr?: string
+  stdout?: string
+}
+
 export interface WhisperFileSelection {
   canceled: boolean
   filePath?: string
@@ -96,6 +108,7 @@ export interface DesktopApi {
   getPlatform: () => Promise<DesktopPlatform>
   getSystemStatus: () => Promise<SystemStatus>
   getPrerequisites: () => Promise<PrerequisiteCheck[]>
+  installPrerequisite: (id: PrerequisiteCheckId) => Promise<PrerequisiteInstallResult>
   selectWhisperFile: () => Promise<WhisperFileSelection>
   transcribeWithWhisper: (filePath: string) => Promise<WhisperTranscriptionResult>
   onWhisperOutput: (callback: (chunk: WhisperOutputChunk) => void) => () => void

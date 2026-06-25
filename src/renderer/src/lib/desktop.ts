@@ -3,6 +3,8 @@ import type {
   DesktopApi,
   DesktopPlatform,
   PrerequisiteCheck,
+  PrerequisiteCheckId,
+  PrerequisiteInstallResult,
   SystemStatus
 } from '@shared/ipc'
 
@@ -50,6 +52,12 @@ const browserDesktopApi: DesktopApi = {
     { id: 'ctranslate2', installed: null, status: 'missing' },
     { id: 'torch', installed: null, status: 'missing' }
   ],
+  installPrerequisite: async (id: PrerequisiteCheckId): Promise<PrerequisiteInstallResult> => ({
+    action: 'opened',
+    id,
+    ok: false,
+    stderr: 'Prerequisite installation is available in the Electron desktop app.'
+  }),
   selectWhisperFile: async () => ({ canceled: true }),
   transcribeWithWhisper: async (filePath) => ({
     command: `python.exe -u -m whisper "${filePath}" --language fa`,
