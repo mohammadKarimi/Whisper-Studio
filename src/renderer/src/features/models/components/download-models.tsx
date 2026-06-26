@@ -112,7 +112,7 @@ export default function DownloadedModels({
             </p>
           </div>
         ) : (
-          models.map((model, i) => (
+          models.map((model) => (
             <div
               key={model.id}
               className="group rounded-xl border border-border/40 bg-card p-4 transition-colors hover:border-primary/20"

@@ -15,7 +15,7 @@ interface AppRouteViewProps {
 export function AppRouteView({ activeRoute, desktop }: AppRouteViewProps): JSX.Element {
   switch (activeRoute) {
     case 'new':
-      return <NewTranscription />
+      return <NewTranscription desktop={desktop} />
     case 'settings':
       return <SettingsPage />
     case 'studio':

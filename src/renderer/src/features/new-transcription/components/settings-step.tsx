@@ -1,5 +1,8 @@
-import { useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
+import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
+import type { DesktopApi, DownloadedWhisperModel } from '@shared/ipc'
+import { useNavigate } from '@/app/navigation'
 import { Banner } from '@/components/banner'
+import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -13,7 +16,7 @@ import { ChevronDown, Info, Cpu, Zap, Globe, Brain, Users, Volume2, Waves } from
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { captions } from '@/captions'
 
-const MODELS = captions.newTranscription.settings.models
+const MODEL_DETAILS = captions.newTranscription.settings.models
 const LANGUAGES = captions.newTranscription.settings.languages
 const settingRows = captions.newTranscription.settings.rows
 
@@ -74,15 +77,84 @@ function SettingRow({
 }
 
 interface StepSettingsProps {
+  desktop: DesktopApi
   settings: TranscriptionSettings
   setSettings: Dispatch<SetStateAction<TranscriptionSettings>>
 }
 
-export default function StepSettings({ settings, setSettings }: StepSettingsProps): JSX.Element {
+function getDownloadedModelLabel(model: DownloadedWhisperModel): string {
+  return model.name
+}
+
+export default function StepSettings({
+  desktop,
+  settings,
+  setSettings
+}: StepSettingsProps): JSX.Element {
+  const navigate = useNavigate()
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [downloadedModels, setDownloadedModels] = useState<DownloadedWhisperModel[]>([])
+  const [isLoadingModels, setIsLoadingModels] = useState(true)
+  const [languageSearch, setLanguageSearch] = useState('')
 
   const update = (key: keyof TranscriptionSettings, value: boolean | string): void =>
     setSettings({ ...settings, [key]: value })
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadDownloadedModels(): Promise<void> {
+      setIsLoadingModels(true)
+
+      try {
+        const result = await desktop.getDownloadedModels()
+
+        if (!isActive) {
+          return
+        }
+
+        setDownloadedModels(result.models)
+        setSettings((current) => {
+          if (result.models.length === 0) {
+            return { ...current, model: '' }
+          }
+
+          if (result.models.some((model) => model.name === current.model)) {
+            return current
+          }
+
+          return { ...current, model: result.models[0].name }
+        })
+      } finally {
+        if (isActive) {
+          setIsLoadingModels(false)
+        }
+      }
+    }
+
+    void loadDownloadedModels()
+
+    return () => {
+      isActive = false
+    }
+  }, [desktop, setSettings])
+
+  const hasDownloadedModels = downloadedModels.length > 0
+  const selectedDownloadedModel = downloadedModels.find((model) => model.name === settings.model)
+  const selectedModelLabel = selectedDownloadedModel
+    ? getDownloadedModelLabel(selectedDownloadedModel)
+    : captions.newTranscription.settings.modelPlaceholder
+  const filteredLanguages = LANGUAGES.filter((language) => {
+    const query = languageSearch.trim().toLowerCase()
+
+    if (!query) {
+      return true
+    }
+
+    return (
+      language.value.toLowerCase().includes(query) || language.label.toLowerCase().includes(query)
+    )
+  })
 
   return (
     <div className="space-y-6">
@@ -91,6 +163,23 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
         emphasis={captions.newTranscription.settings.recommendedBanner.emphasis}
         detail={captions.newTranscription.settings.recommendedBanner.detail}
       />
+
+      {!isLoadingModels && !hasDownloadedModels && (
+        <div className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[13px] text-warning">
+              {captions.newTranscription.settings.noDownloadedModelsAlert}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/models')}
+              className="shrink-0 rounded-md bg-warning/15 px-3 py-1.5 text-[12px] font-medium text-warning hover:bg-warning/20"
+            >
+              {captions.newTranscription.settings.goToModels}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Core Settings */}
       <div className="glass-panel relative z-30 rounded-xl divide-y divide-border/50">
@@ -105,12 +194,29 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
               <SelectTrigger className="w-[180px] h-9 text-[13px] bg-muted">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value} className="text-[13px] mb-1">
-                    {lang.label}
-                  </SelectItem>
-                ))}
+              <SelectContent className="w-[260px]">
+                <div className="p-1">
+                  <Input
+                    value={languageSearch}
+                    onChange={(event) => setLanguageSearch(event.target.value)}
+                    onClick={(event) => event.stopPropagation()}
+                    placeholder={captions.newTranscription.settings.languageSearchPlaceholder}
+                    className="h-8 text-[12px]"
+                  />
+                </div>
+                <div className="max-h-[240px] overflow-y-auto">
+                  {filteredLanguages.length === 0 ? (
+                    <p className="px-2 py-2 text-[12px] text-muted-foreground">
+                      {captions.newTranscription.settings.noLanguageResults}
+                    </p>
+                  ) : (
+                    filteredLanguages.map((lang) => (
+                      <SelectItem key={lang.value} value={lang.value} className="text-[13px] mb-1">
+                        {lang.label}
+                      </SelectItem>
+                    ))
+                  )}
+                </div>
               </SelectContent>
             </Select>
           </SettingRow>
@@ -121,23 +227,20 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
             icon={Brain}
             label={settingRows.model.label}
             description={settingRows.model.description}
-            tooltip={settingRows.model.tooltip}
+            tooltip={
+              hasDownloadedModels
+                ? settingRows.model.tooltip
+                : captions.newTranscription.settings.noDownloadedModelsTooltip
+            }
           >
             <Select value={settings.model} onValueChange={(v) => update('model', v)}>
-              <SelectTrigger className="w-[180px] h-9 text-[13px]">
-                <SelectValue />
+              <SelectTrigger className="w-[180px] h-9 text-[13px]" disabled={!hasDownloadedModels}>
+                <span className="truncate">{selectedModelLabel}</span>
               </SelectTrigger>
               <SelectContent>
-                {MODELS.map((m) => (
-                  <SelectItem key={m.value} value={m.value} className="text-[13px] mb-1">
-                    <div className="flex items-center gap-2">
-                      {m.label}
-                      {m.recommended && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-primary font-medium">
-                          {captions.newTranscription.settings.recommendedBadge}
-                        </span>
-                      )}
-                    </div>
+                {downloadedModels.map((m) => (
+                  <SelectItem key={m.id} value={m.name} className="text-[13px] mb-1">
+                    <div className="flex items-center gap-2">{getDownloadedModelLabel(m)}</div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -150,7 +253,8 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
           <div className="px-5 py-3">
             <div className="grid grid-cols-4 gap-4">
               {(() => {
-                const m = MODELS.find((x) => x.value === settings.model)
+                const m = MODEL_DETAILS.find((x) => x.value === settings.model)
+                const downloadedModel = downloadedModels.find((x) => x.name === settings.model)
                 return m ? (
                   <>
                     <div>
@@ -176,6 +280,35 @@ export default function StepSettings({ settings, setSettings }: StepSettingsProp
                         {captions.newTranscription.settings.modelDetails.note}
                       </span>
                       <span className="text-[12px] text-muted-foreground">{m.desc}</span>
+                    </div>
+                  </>
+                ) : downloadedModel ? (
+                  <>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
+                        {captions.newTranscription.settings.modelDetails.speed}
+                      </span>
+                      <span className="text-[13px] font-mono font-medium">-</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
+                        {captions.newTranscription.settings.modelDetails.accuracy}
+                      </span>
+                      <span className="text-[13px] font-medium">-</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
+                        {captions.newTranscription.settings.modelDetails.vram}
+                      </span>
+                      <span className="text-[13px] font-mono font-medium">-</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">
+                        {captions.newTranscription.settings.modelDetails.note}
+                      </span>
+                      <span className="text-[12px] text-muted-foreground">
+                        {downloadedModel.source}
+                      </span>
                     </div>
                   </>
                 ) : null

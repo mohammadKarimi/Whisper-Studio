@@ -109,7 +109,7 @@ export default function AvailableModels({
             </p>
           </div>
         ) : (
-          availableModels.map((model, i) => {
+          availableModels.map((model) => {
             const isDownloading = downloading.has(model.id)
             const progress = downloadProgress[model.repoId]
             const expectedSizeBytes = parseSize(model.size)

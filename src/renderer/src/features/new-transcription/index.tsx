@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react'
+import type { DesktopApi } from '@shared/ipc'
 import { useNavigate } from '@/app/navigation'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/captions'
@@ -10,7 +11,11 @@ import { ArrowLeft, ArrowRight, ChevronRight, Sparkles } from 'lucide-react'
 
 const STEPS = captions.newTranscription.steps
 
-export default function NewTranscription() {
+interface NewTranscriptionProps {
+  desktop: DesktopApi
+}
+
+export default function NewTranscription({ desktop }: NewTranscriptionProps) {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [file, setFile] = useState<TranscriptionFile | null>(null)
@@ -87,7 +92,9 @@ export default function NewTranscription() {
       {/* Step Content */}
       <div key={step}>
         {step === 1 && <StepFiles file={file} setFile={setFile} />}
-        {step === 2 && <StepSettings settings={settings} setSettings={setSettings} />}
+        {step === 2 && (
+          <StepSettings desktop={desktop} settings={settings} setSettings={setSettings} />
+        )}
         {step === 3 && (
           <StepOutput outputFormats={outputFormats} setOutputFormats={setOutputFormats} />
         )}
@@ -111,7 +118,7 @@ export default function NewTranscription() {
             {step < 3 && (
               <Button
                 onClick={() => setStep(step + 1)}
-                disabled={step === 1 && !file}
+                disabled={(step === 1 && !file) || (step === 2 && !settings.model)}
                 className="gap-2"
               >
                 {captions.newTranscription.navigation.continue} <ArrowRight className="w-4 h-4" />
