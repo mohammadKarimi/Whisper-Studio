@@ -1,8 +1,14 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, net, protocol, shell } from 'electron'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { registerSystemHandlers } from './ipc/system'
 import { registerWhisperHandlers } from './ipc/whisper'
 import { IPC_CHANNELS } from '../shared/ipc'
+
+// Register a safe protocol for serving local media files from the renderer
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'local-file', privileges: { secure: true, supportFetchAPI: true, stream: true } }
+])
 
 let mainWindow: BrowserWindow | null = null
 
@@ -70,6 +76,11 @@ function createMainWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  protocol.handle('local-file', (request) => {
+    const filePath = decodeURIComponent(request.url.slice('local-file:///'.length))
+    return net.fetch(pathToFileURL(filePath).toString())
+  })
+
   registerSystemHandlers(() => mainWindow)
   registerWhisperHandlers()
 

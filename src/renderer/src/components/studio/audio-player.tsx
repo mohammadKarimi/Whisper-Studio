@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type React from 'react'
-import { Play, Pause, Volume2, Repeat, Rewind, FastForward } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Repeat, Rewind, FastForward } from 'lucide-react'
 import { captions } from '@/captions'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface AudioPlayerProps {
   src?: string
@@ -18,6 +19,8 @@ function secondsToDisplay(s: number): string {
   return `${m}:${String(sec).padStart(2, '0')}`
 }
 
+const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
+
 export default function AudioPlayer({
   src,
   knownDuration,
@@ -25,9 +28,14 @@ export default function AudioPlayer({
   seekToRef
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const currentTimeRef = useRef(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentSeconds, setCurrentSeconds] = useState(0)
   const [durationSeconds, setDurationSeconds] = useState(0)
+  const [volume, setVolume] = useState(0.75)
+  const [isMuted, setIsMuted] = useState(false)
+  const [speed, setSpeed] = useState(1)
+  const [isLooping, setIsLooping] = useState(false)
 
   useEffect(() => {
     setIsPlaying(false)
@@ -44,13 +52,31 @@ export default function AudioPlayer({
     }
   }, [seekToRef])
 
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.volume = isMuted ? 0 : volume
+  }, [volume, isMuted])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.playbackRate = speed
+  }, [speed])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.loop = isLooping
+  }, [isLooping])
+
   function handleTogglePlay() {
     const audio = audioRef.current
     if (!audio) return
     if (isPlaying) {
       audio.pause()
     } else {
-      void audio.play()
+      audio.play().catch((err) => console.error('[AudioPlayer] play() failed:', err))
     }
   }
 
@@ -63,6 +89,26 @@ export default function AudioPlayer({
     audio.currentTime = ratio * totalDuration
   }
 
+  function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = parseFloat(e.target.value)
+    setVolume(v)
+    setIsMuted(v === 0)
+  }
+
+  function handleCycleSpeed() {
+    const idx = SPEED_OPTIONS.indexOf(speed)
+    const next = SPEED_OPTIONS[(idx + 1) % SPEED_OPTIONS.length]
+    setSpeed(next)
+  }
+
+  function skip(e: React.MouseEvent, delta: number) {
+    e.stopPropagation()
+    const audio = audioRef.current
+    if (!audio) return
+    const total = isFinite(audio.duration) ? audio.duration : (knownDuration ?? Infinity)
+    audio.currentTime = Math.max(0, Math.min(total, currentTimeRef.current + delta))
+  }
+
   const effectiveDuration = durationSeconds || knownDuration || 0
   const progress = effectiveDuration > 0 ? (currentSeconds / effectiveDuration) * 100 : 0
 
@@ -71,44 +117,63 @@ export default function AudioPlayer({
       {src && (
         <audio
           ref={audioRef}
-          src={src.startsWith('file://') ? src : `file://${src}`}
+          src={(() => {
+            if (!src) return undefined
+            if (src.startsWith('local-file://')) return src
+            return 'local-file:///' + src.replace(/\\/g, '/')
+          })()}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onEnded={() => setIsPlaying(false)}
           onTimeUpdate={() => {
             const t = audioRef.current?.currentTime ?? 0
+            currentTimeRef.current = t
             setCurrentSeconds(t)
             onTimeUpdate?.(t)
           }}
-          onLoadedMetadata={() => setDurationSeconds(audioRef.current?.duration ?? 0)}
+          onLoadedMetadata={() => {
+            const audio = audioRef.current
+            if (!audio) return
+            setDurationSeconds(audio.duration ?? 0)
+            audio.volume = isMuted ? 0 : volume
+            audio.playbackRate = speed
+            audio.loop = isLooping
+          }}
         />
       )}
       <div className="flex items-center gap-5">
         {/* Transport */}
         <div className="flex items-center gap-1">
-          <button
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
-            onClick={() => {
-              if (audioRef.current) audioRef.current.currentTime = Math.max(0, currentSeconds - 10)
-            }}
-          >
-            <Rewind className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleTogglePlay}
-            className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-          >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-          </button>
-          <button
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
-            onClick={() => {
-              if (audioRef.current)
-                audioRef.current.currentTime = Math.min(durationSeconds, currentSeconds + 10)
-            }}
-          >
-            <FastForward className="w-4 h-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+              onClick={(e) => skip(e, -10)}
+            >
+              <Rewind className="w-4 h-4" />
+            </TooltipTrigger>
+            <TooltipContent side="top">Back 10s</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              onClick={(e) => {
+                e.stopPropagation()
+                handleTogglePlay()
+              }}
+              className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+            </TooltipTrigger>
+            <TooltipContent side="top">{isPlaying ? 'Pause' : 'Play'}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+              onClick={(e) => skip(e, 10)}
+            >
+              <FastForward className="w-4 h-4" />
+            </TooltipTrigger>
+            <TooltipContent side="top">Forward 10s</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Time + Waveform seek */}
@@ -118,7 +183,6 @@ export default function AudioPlayer({
           </span>
           <div className="flex-1 group cursor-pointer" onClick={handleSeek}>
             <div className="relative h-8 flex items-center">
-              {/* Waveform bars */}
               <div className="absolute inset-0 flex items-center gap-[2px] overflow-hidden">
                 {Array.from({ length: 120 }).map((_, i) => {
                   const h = 20 + Math.abs(Math.sin(i * 0.4) * 60) + Math.abs(Math.cos(i * 0.7) * 20)
@@ -132,7 +196,6 @@ export default function AudioPlayer({
                   )
                 })}
               </div>
-              {/* Playhead */}
               <div
                 className="absolute top-0 bottom-0 w-0.5 bg-primary rounded-full shadow-[0_0_8px] shadow-primary/50"
                 style={{ left: `${progress}%` }}
@@ -149,20 +212,47 @@ export default function AudioPlayer({
         {/* Volume + speed */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <Volume2 className="w-4 h-4 text-muted-foreground" />
-            <div className="w-20 h-1 bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full bg-muted-foreground/50 rounded-full"
-                style={{ width: '75%' }}
-              />
-            </div>
+            <Tooltip>
+              <TooltipTrigger
+                onClick={() => setIsMuted((m) => !m)}
+                className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX className="w-4 h-4" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+              </TooltipTrigger>
+              <TooltipContent side="top">{isMuted ? 'Unmute' : 'Mute'}</TooltipContent>
+            </Tooltip>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={isMuted ? 0 : volume}
+              onChange={handleVolumeChange}
+              className="w-20 h-1 accent-primary cursor-pointer"
+            />
           </div>
-          <button className="text-[11px] text-muted-foreground hover:text-foreground font-mono px-2.5 py-1 rounded-md bg-secondary/50 hover:bg-secondary transition-colors">
-            {captions.audioPlayer.speed}
-          </button>
-          <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors">
-            <Repeat className="w-3.5 h-3.5" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              onClick={handleCycleSpeed}
+              className="text-[11px] text-muted-foreground hover:text-foreground font-mono px-2.5 py-1 rounded-md bg-secondary/50 hover:bg-secondary transition-colors min-w-[3rem] text-center"
+            >
+              {speed === 1 ? '1×' : `${speed}×`}
+            </TooltipTrigger>
+            <TooltipContent side="top">Playback speed</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              onClick={() => setIsLooping((l) => !l)}
+              className={`p-1.5 rounded-lg transition-colors ${isLooping ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'}`}
+            >
+              <Repeat className="w-3.5 h-3.5" />
+            </TooltipTrigger>
+            <TooltipContent side="top">{isLooping ? 'Loop on' : 'Loop off'}</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

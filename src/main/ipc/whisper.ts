@@ -157,40 +157,6 @@ function getPythonEnv(): NodeJS.ProcessEnv {
   }
 }
 
-function runPythonCheck(args: string[]): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    const child = spawn('python', args, {
-      env: getPythonEnv(),
-      timeout: 10000,
-      windowsHide: true
-    })
-    const stdoutChunks: Buffer[] = []
-    const stderrChunks: Buffer[] = []
-
-    child.stdout.on('data', (chunk: Buffer) => {
-      stdoutChunks.push(chunk)
-    })
-
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderrChunks.push(chunk)
-    })
-
-    child.on('error', reject)
-
-    child.on('close', (exitCode) => {
-      const stdout = Buffer.concat(stdoutChunks).toString('utf8')
-      const stderr = Buffer.concat(stderrChunks).toString('utf8')
-
-      if (exitCode === 0) {
-        resolve({ stdout, stderr })
-        return
-      }
-
-      reject(new Error((stderr || stdout || `python exited with code ${exitCode}`).trim()))
-    })
-  })
-}
-
 function normalizeLanguage(language: string): string | null {
   const normalizedLanguage = language.trim().toLowerCase()
 
