@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { DesktopApi, TranscriptionRecord } from '@shared/ipc'
 import { Mic, Clock, FileAudio, Trash2, Loader2, FolderOpen } from 'lucide-react'
 import { setStudioRecord } from '@/lib/studio-store'
+import { captions } from '@/lib/strings'
 import { useAppRoute } from '@/app/use-app-route'
 import { Button } from '@/components/ui/button'
 
@@ -15,15 +16,16 @@ const ACCENTS = [
 ]
 
 function formatRelativeDate(ts: number): string {
+  const timeCaptions = captions.dashboard.transcriptionGrid.relativeTime
   const diff = Date.now() - ts
   const minutes = Math.floor(diff / 60000)
-  if (minutes < 2) return 'Just now'
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 2) return timeCaptions.justNow
+  if (minutes < 60) return `${minutes}${timeCaptions.minutesSuffix}`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return `${hours}${timeCaptions.hoursSuffix}`
   const days = Math.floor(hours / 24)
-  if (days === 1) return 'Yesterday'
-  if (days < 7) return `${days} days ago`
+  if (days === 1) return timeCaptions.yesterday
+  if (days < 7) return `${days}${timeCaptions.daysSuffix}`
   return new Date(ts).toLocaleDateString()
 }
 
@@ -68,7 +70,7 @@ export default function TranscriptionGrid({ desktop }: TranscriptionGridProps) {
     return (
       <div className="flex items-center gap-2 text-muted-foreground text-sm py-8">
         <Loader2 className="w-4 h-4 animate-spin" />
-        Loading transcriptions...
+        {captions.dashboard.transcriptionGrid.loading}
       </div>
     )
   }
@@ -77,9 +79,11 @@ export default function TranscriptionGrid({ desktop }: TranscriptionGridProps) {
     return (
       <div className="glass-panel rounded-2xl p-12 text-center">
         <FolderOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-        <p className="text-sm font-medium text-muted-foreground">No transcriptions yet</p>
+        <p className="text-sm font-medium text-muted-foreground">
+          {captions.dashboard.transcriptionGrid.empty.title}
+        </p>
         <p className="text-[11px] text-muted-foreground/60 mt-1">
-          Start a new transcription to see it here
+          {captions.dashboard.transcriptionGrid.empty.subtitle}
         </p>
       </div>
     )
@@ -91,17 +95,18 @@ export default function TranscriptionGrid({ desktop }: TranscriptionGridProps) {
       {confirmId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-card border border-border rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-[15px] font-semibold mb-1">Delete transcription?</h3>
+            <h3 className="text-[15px] font-semibold mb-1">
+              {captions.dashboard.transcriptionGrid.confirmDelete.title}
+            </h3>
             <p className="text-[13px] text-muted-foreground mb-5">
-              This will permanently remove the transcription and all its files. This cannot be
-              undone.
+              {captions.dashboard.transcriptionGrid.confirmDelete.description}
             </p>
             <div className="flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => setConfirmId(null)}>
-                Cancel
+                {captions.dashboard.transcriptionGrid.confirmDelete.cancel}
               </Button>
               <Button variant="destructive" size="sm" onClick={() => void handleDelete(confirmId)}>
-                Delete
+                {captions.dashboard.transcriptionGrid.confirmDelete.confirm}
               </Button>
             </div>
           </div>
@@ -109,9 +114,14 @@ export default function TranscriptionGrid({ desktop }: TranscriptionGridProps) {
       )}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Recent Transcriptions</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            {captions.dashboard.transcriptionGrid.header.title}
+          </h2>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            {records.length} {records.length === 1 ? 'transcription' : 'transcriptions'}
+            {records.length}{' '}
+            {records.length === 1
+              ? captions.dashboard.transcriptionGrid.header.singular
+              : captions.dashboard.transcriptionGrid.header.plural}
           </p>
         </div>
       </div>

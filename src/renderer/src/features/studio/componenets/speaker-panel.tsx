@@ -1,6 +1,6 @@
 import { Clock, Gauge, Hash, TrendingUp } from 'lucide-react'
 import { captions } from '@/lib/strings'
-import { Banner } from '../banner'
+import { Banner } from '../../../components/banner'
 
 interface SpeakerPanelProps {
   activeSpeaker: string | null

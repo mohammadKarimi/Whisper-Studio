@@ -51,6 +51,47 @@ export const captions = {
       placeholder: 'This page is ready for a feature.'
     }
   },
+  dashboard: {
+    welcomeHeader: {
+      appName: 'Whisper Studio',
+      greetings: {
+        morning: 'Good morning',
+        afternoon: 'Good afternoon',
+        evening: 'Good evening'
+      },
+      subtitle:
+        'Transcribe, edit, and enhance your audio with AI-powered accuracy. Pick up where you left off or start something new.',
+      actions: {
+        newTranscription: 'New Transcription'
+      }
+    },
+    transcriptionGrid: {
+      loading: 'Loading transcriptions...',
+      empty: {
+        title: 'No transcriptions yet',
+        subtitle: 'Start a new transcription to see it here'
+      },
+      confirmDelete: {
+        title: 'Delete transcription?',
+        description:
+          'This will permanently remove the transcription and all its files. This cannot be undone.',
+        cancel: 'Cancel',
+        confirm: 'Delete'
+      },
+      header: {
+        title: 'Recent Transcriptions',
+        singular: 'transcription',
+        plural: 'transcriptions'
+      },
+      relativeTime: {
+        justNow: 'Just now',
+        minutesSuffix: 'm ago',
+        hoursSuffix: 'h ago',
+        yesterday: 'Yesterday',
+        daysSuffix: ' days ago'
+      }
+    }
+  },
   settingsPage: {
     title: 'Settings'
   },
@@ -579,9 +620,22 @@ export const captions = {
     },
     actions: {
       copied: 'Copied',
+      copiedWithBang: 'Copied!',
       copyToClipboard: 'Copy to Clipboard',
+      copy: 'Copy',
       chooseFolder: 'Choose Folder',
-      saveLocally: 'Save Locally'
+      saveLocally: 'Save Locally',
+      saveAll: 'Save All',
+      backToStudio: 'Back to Studio'
+    },
+    labels: {
+      format: 'Format',
+      fallbackTitle: 'Export',
+      segments: 'segments'
+    },
+    empty: {
+      noTranscriptionLoaded: 'No transcription loaded.',
+      goBackToStudio: 'No transcription loaded - go back to Studio first'
     },
     preview: {
       titlePrefix: 'Preview',
@@ -704,7 +758,18 @@ That's excellent. Can you break down which features drove the most engagement?`,
   },
   audioPlayer: {
     defaultDuration: '01:23:45',
-    speed: '1.0x'
+    speed: '1.0x',
+    tooltips: {
+      back10s: 'Back 10s',
+      play: 'Play',
+      pause: 'Pause',
+      forward10s: 'Forward 10s',
+      mute: 'Mute',
+      unmute: 'Unmute',
+      playbackSpeed: 'Playback speed',
+      loopOn: 'Loop on',
+      loopOff: 'Loop off'
+    }
   },
   errors: {
     selectContext: 'Select components must be used inside Select',

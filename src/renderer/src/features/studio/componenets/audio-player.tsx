@@ -144,7 +144,7 @@ export default function AudioPlayer({
             >
               <Rewind className="w-4 h-4" />
             </TooltipTrigger>
-            <TooltipContent side="top">Back 10s</TooltipContent>
+            <TooltipContent side="top">{captions.audioPlayer.tooltips.back10s}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger
@@ -156,7 +156,9 @@ export default function AudioPlayer({
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
             </TooltipTrigger>
-            <TooltipContent side="top">{isPlaying ? 'Pause' : 'Play'}</TooltipContent>
+            <TooltipContent side="top">
+              {isPlaying ? captions.audioPlayer.tooltips.pause : captions.audioPlayer.tooltips.play}
+            </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger
@@ -165,7 +167,7 @@ export default function AudioPlayer({
             >
               <FastForward className="w-4 h-4" />
             </TooltipTrigger>
-            <TooltipContent side="top">Forward 10s</TooltipContent>
+            <TooltipContent side="top">{captions.audioPlayer.tooltips.forward10s}</TooltipContent>
           </Tooltip>
         </div>
 
@@ -216,7 +218,9 @@ export default function AudioPlayer({
                   <Volume2 className="w-4 h-4" />
                 )}
               </TooltipTrigger>
-              <TooltipContent side="top">{isMuted ? 'Unmute' : 'Mute'}</TooltipContent>
+              <TooltipContent side="top">
+                {isMuted ? captions.audioPlayer.tooltips.unmute : captions.audioPlayer.tooltips.mute}
+              </TooltipContent>
             </Tooltip>
             <input
               type="range"
@@ -235,7 +239,7 @@ export default function AudioPlayer({
             >
               {speed === 1 ? '1×' : `${speed}×`}
             </TooltipTrigger>
-            <TooltipContent side="top">Playback speed</TooltipContent>
+            <TooltipContent side="top">{captions.audioPlayer.tooltips.playbackSpeed}</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger
@@ -244,7 +248,9 @@ export default function AudioPlayer({
             >
               <Repeat className="w-3.5 h-3.5" />
             </TooltipTrigger>
-            <TooltipContent side="top">{isLooping ? 'Loop on' : 'Loop off'}</TooltipContent>
+            <TooltipContent side="top">
+              {isLooping ? captions.audioPlayer.tooltips.loopOn : captions.audioPlayer.tooltips.loopOff}
+            </TooltipContent>
           </Tooltip>
         </div>
       </div>
