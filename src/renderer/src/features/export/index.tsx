@@ -209,7 +209,7 @@ export default function Export({ desktop }: ExportProps) {
 
           {/* Preview */}
           <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="shrink-0 px-4 py-2.5 border-b border-border/50 flex items-center gap-2 bg-card/20">
+            <div className="shrink-0 px-6 py-2.5 border-b border-border/50 flex items-center gap-2 bg-card/20">
               <span className="text-[11px] font-mono text-muted-foreground flex-1">
                 {record?.sourceFileName.replace(/\.[^.]+$/, '')}.{activeFormat}
               </span>

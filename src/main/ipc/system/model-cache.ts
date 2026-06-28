@@ -11,6 +11,7 @@ import type {
 } from '../../../shared/ipc'
 import { createScopedCache } from './cache'
 
+// Known model metadata used to enrich local cache scan results.
 const knownModelInfo: Record<string, { params: string }> = {
   tiny: { params: '39M' },
   'tiny.en': { params: '39M' },
@@ -20,10 +21,12 @@ const knownModelInfo: Record<string, { params: string }> = {
   'small.en': { params: '244M' },
   medium: { params: '769M' },
   'medium.en': { params: '769M' },
+  large: { params: '1.55B' },
   'large-v1': { params: '1.55B' },
   'large-v2': { params: '1.55B' },
   'large-v3': { params: '1.55B' },
-  turbo: { params: '809M' }
+  turbo: { params: '809M' },
+  'large-v3-turbo': { params: '809M' }
 }
 
 export const downloadableModelRepoIds = [
@@ -33,7 +36,8 @@ export const downloadableModelRepoIds = [
   'medium',
   'large-v2',
   'large-v3',
-  'turbo'
+  'turbo',
+  'large-v3-turbo'
 ] as const
 
 type CommandResult = {
@@ -42,10 +46,28 @@ type CommandResult = {
   stdout: string
 }
 
+const PYTHON_CANDIDATES = ['python', 'python3', 'py'] as const
+const PYTHON_DISCOVERY_TIMEOUT_MS = 2500
+
+function isKnownDownloadableModel(
+  modelId: string
+): modelId is (typeof downloadableModelRepoIds)[number] {
+  return downloadableModelRepoIds.includes(modelId as (typeof downloadableModelRepoIds)[number])
+}
+
+function resolveExitCode(error: unknown): number {
+  if (typeof error === 'object' && error && 'code' in error && typeof error.code === 'number') {
+    return error.code
+  }
+
+  return error ? 1 : 0
+}
+
 function getWhisperCacheDir(): string {
   return process.env.WHISPER_CACHE_DIR ?? join(homedir(), '.cache', 'whisper')
 }
 
+// Runs a short-lived process and returns normalized output.
 function runCommand(
   command: string,
   args: readonly string[],
@@ -57,15 +79,8 @@ function runCommand(
       [...args],
       { timeout: timeoutMs, windowsHide: true },
       (error, stdout, stderr) => {
-        const exitCode =
-          typeof error === 'object' && error && 'code' in error && typeof error.code === 'number'
-            ? error.code
-            : error
-              ? 1
-              : 0
-
         resolve({
-          exitCode,
+          exitCode: resolveExitCode(error),
           stderr: stderr.trim(),
           stdout: stdout.trim()
         })
@@ -74,10 +89,11 @@ function runCommand(
   })
 }
 
+// Finds any usable Python launcher available on the system.
 async function findPython(): Promise<string | null> {
-  for (const command of ['python', 'python3', 'py']) {
+  for (const command of PYTHON_CANDIDATES) {
     const args = command === 'py' ? ['-3', '--version'] : ['--version']
-    const result = await runCommand(command, args, 2500)
+    const result = await runCommand(command, args, PYTHON_DISCOVERY_TIMEOUT_MS)
 
     if (result.exitCode === 0 || result.stdout || result.stderr) {
       return command
@@ -87,6 +103,7 @@ async function findPython(): Promise<string | null> {
   return null
 }
 
+// Scans the Whisper cache directory for downloaded model files.
 async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
   const cacheDir = getWhisperCacheDir()
   let entries: Dirent<string>[]
@@ -98,6 +115,7 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
   }
 
   const modelOrder = Object.keys(knownModelInfo)
+  const orderByModel = new Map(modelOrder.map((name, index) => [name, index]))
   const models: DownloadedWhisperModel[] = []
 
   for (const entry of entries) {
@@ -129,9 +147,9 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
   }
 
   models.sort((a, b) => {
-    const aOrder = modelOrder.indexOf(a.name)
-    const bOrder = modelOrder.indexOf(b.name)
-    return (aOrder === -1 ? 999 : aOrder) - (bOrder === -1 ? 999 : bOrder)
+    const aOrder = orderByModel.get(a.name) ?? 999
+    const bOrder = orderByModel.get(b.name) ?? 999
+    return aOrder - bOrder
   })
 
   return {
@@ -143,15 +161,17 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
 const CACHE_DURATION_MS = 5000
 const downloadedModelsCache = createScopedCache(scanDownloadedModels, CACHE_DURATION_MS)
 
+// Returns a short-lived cached view of downloaded models.
 export async function getDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
   return downloadedModelsCache.get()
 }
 
+// Downloads a model via Python whisper.load_model while emitting progress snapshots.
 export async function downloadModel(
   modelId: string,
   emitProgress?: (progress: WhisperModelDownloadProgress) => void
 ): Promise<WhisperModelActionResult> {
-  if (!downloadableModelRepoIds.includes(modelId as (typeof downloadableModelRepoIds)[number])) {
+  if (!isKnownDownloadableModel(modelId)) {
     return {
       id: modelId,
       ok: false,
@@ -212,6 +232,7 @@ export async function downloadModel(
   }
 }
 
+// Removes a downloaded model file from the local Whisper cache.
 export async function deleteModel(id: string): Promise<WhisperModelActionResult> {
   const cacheDir = getWhisperCacheDir()
   const ptPath = join(cacheDir, `${id}.pt`)

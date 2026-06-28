@@ -362,64 +362,64 @@ export const captions = {
         {
           value: 'tiny',
           label: 'Tiny',
-          speed: '~75x',
-          accuracy: 'Lower',
-          vram: '1 GB',
-          desc: 'Fastest, good for drafts',
+          speed: 'Very Fast',
+          accuracy: 'Basic',
+          vram: '≈1 GB',
+          desc: 'Fastest, ideal for quick drafts',
           recommended: false
         },
         {
           value: 'base',
           label: 'Base',
-          speed: '~50x',
+          speed: 'Very Fast',
           accuracy: 'Fair',
-          vram: '1 GB',
-          desc: 'Quick transcriptions',
+          vram: '≈1 GB',
+          desc: 'Quick transcriptions with better accuracy',
           recommended: false
         },
         {
           value: 'small',
           label: 'Small',
-          speed: '~32x',
+          speed: 'Fast',
           accuracy: 'Good',
-          vram: '2 GB',
-          desc: 'Balanced choice',
-          recommended: false
+          vram: '≈2 GB',
+          desc: 'Best balance of speed and quality',
+          recommended: true
         },
         {
           value: 'medium',
           label: 'Medium',
-          speed: '~16x',
+          speed: 'Medium',
           accuracy: 'High',
-          vram: '5 GB',
-          desc: 'Professional quality',
-          recommended: false
-        },
-        {
-          value: 'large-v2',
-          label: 'Large-v2',
-          speed: '~8x',
-          accuracy: 'Best',
-          vram: '10 GB',
-          desc: 'Maximum accuracy',
+          vram: '≈5 GB',
+          desc: 'Professional-quality transcriptions',
           recommended: true
         },
         {
+          value: 'large-v2',
+          label: 'Large v2',
+          speed: 'Slow',
+          accuracy: 'Excellent',
+          vram: '≈10 GB',
+          desc: 'Legacy high-accuracy model',
+          recommended: false
+        },
+        {
           value: 'large-v3',
-          label: 'Large-v3',
-          speed: '~8x',
+          label: 'Large v3',
+          speed: 'Slow',
           accuracy: 'Best',
-          vram: '10 GB',
-          desc: 'Maximum accuracy',
+          vram: '≈10 GB',
+          desc: 'Best multilingual accuracy',
           recommended: true
         },
         {
           value: 'large-v3-turbo',
-          label: 'Large-v3-turbo',
-          speed: '~8x',
-          accuracy: 'Best',
-          vram: '10 GB',
-          desc: 'Maximum accuracy',
+          label: 'Turbo',
+          speed: 'Fast',
+          accuracy: 'Very High',
+          vram: '≈6 GB',
+          desc: 'Near Large-v3 quality at much higher speed',
           recommended: true
         }
       ],
