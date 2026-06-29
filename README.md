@@ -1,7 +1,8 @@
 # Whisper Studio
 
-[![CI](https://github.com/your-org/whisper-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/whisper-studio/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+<img width="3840" height="2280" alt="image 36" src="https://github.com/user-attachments/assets/a483f97f-30b6-4722-b0ee-83c139244f91" />
 
 A cross-platform desktop application for AI-powered audio and video transcription using [OpenAI Whisper](https://github.com/openai/whisper). Built with Electron, React, TypeScript, and Vite.
 
