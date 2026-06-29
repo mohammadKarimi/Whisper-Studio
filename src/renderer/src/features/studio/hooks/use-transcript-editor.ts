@@ -100,7 +100,6 @@ export function useTranscriptEditor(
 
   // Initialize segments from record once on mount. The record is set in context
   // before navigation so it is reliably available when the component first renders.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!record) {
       setLoading(false)
@@ -119,7 +118,7 @@ export function useTranscriptEditor(
     setSegments(segs)
     if (segs.length > 0) setActiveSegment(segs[0].id)
     setLoading(false)
-  }, []) // intentional: initialize once from the record present at mount
+  }, [record]) // intentional: initialize once from the record present at mount
 
   // Scroll active segment into view when playback drives the selection change
   useEffect(() => {

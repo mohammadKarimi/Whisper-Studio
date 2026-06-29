@@ -1,6 +1,6 @@
 {
   "name": "Whisper Studio",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Open-source Electron, React, and TypeScript desktop boilerplate for Whisper Studio.",
   "author": "Whisper Studio Contributors",
   "license": "MIT",
@@ -47,6 +47,7 @@
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
+    "esbuild": "^0.28.1",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react-hooks": "^5.1.0",

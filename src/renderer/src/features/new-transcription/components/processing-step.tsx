@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import type {
-  TranscriptionApi,
-  TranscriptionRecord,
-  WhisperOutputFile,
-  WhisperProgressPhase
-} from '@shared/ipc'
+import type { TranscriptionApi, TranscriptionRecord, WhisperProgressPhase } from '@shared/ipc'
 import { useStudioContext } from '@/lib/studio-context'
 import { useAppRoute } from '@/app/use-app-route'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/lib/strings'
-import { formatBytes } from '@/lib/utils'
+import { formatBytes, formatElapsed } from '@/lib/utils'
 import {
   Loader2,
   CheckCircle2,
@@ -19,7 +14,8 @@ import {
   FileAudio,
   FileVideo,
   ChevronDown,
-  Terminal
+  Terminal,
+  Timer
 } from 'lucide-react'
 import type { TranscriptionFile } from './files-step'
 import type { TranscriptionSettings } from './settings-step'
@@ -64,12 +60,11 @@ export default function Processing({
   const [currentStage, setCurrentStage] = useState(0)
   const [message, setMessage] = useState<string>(captions.processing.status.inProgress)
   const [error, setError] = useState<string | null>(null)
-  const [outputFiles, setOutputFiles] = useState<WhisperOutputFile[]>([])
-  const [outputDirectory, setOutputDirectory] = useState<string | null>(null)
   const [completedRecord, setCompletedRecord] = useState<TranscriptionRecord | null>(null)
   const [commands, setCommands] = useState<string[]>([])
   const [logs, setLogs] = useState<string[]>([])
   const [logsOpen, setLogsOpen] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
   const { navigateTo } = useAppRoute()
   const { setRecord } = useStudioContext()
   const hasStarted = useRef(false)
@@ -148,8 +143,6 @@ export default function Processing({
           return
         }
 
-        setOutputFiles(result.outputFiles ?? [])
-        setOutputDirectory(result.outputDirectory ?? null)
         if (result.record) setCompletedRecord(result.record)
         setCommands((current) =>
           current.includes(result.command) ? current : [...current, result.command]
@@ -207,6 +200,12 @@ export default function Processing({
   const isFailed = Boolean(error)
   const FileIcon = file?.type === 'video' ? FileVideo : FileAudio
 
+  useEffect(() => {
+    if (isComplete || isFailed) return
+    const interval = setInterval(() => setElapsed((s) => s + 1), 1000)
+    return () => clearInterval(interval)
+  }, [isComplete, isFailed])
+
   return (
     <div className="mx-auto">
       {/* Header */}
@@ -221,13 +220,13 @@ export default function Processing({
         </p>
       </div>
 
-      {/* Current Job */}
+      {/* Current Job + Stages */}
       <div className="glass-panel rounded-2xl p-6 mb-4">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
             <FileIcon className="w-5 h-5 text-primary" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-[14px] font-medium">
               {file?.name ?? captions.processing.job.fileName}
             </p>
@@ -237,10 +236,20 @@ export default function Processing({
                 : captions.processing.job.details}
             </p>
           </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Timer
+              className={`w-3.5 h-3.5 ${isComplete || isFailed ? 'text-muted-foreground' : 'text-primary'}`}
+            />
+            <span
+              className={`font-mono text-sm tabular-nums ${isComplete || isFailed ? 'text-muted-foreground' : 'text-primary'}`}
+            >
+              {formatElapsed(elapsed)}
+            </span>
+          </div>
         </div>
 
         {/* Progress bar */}
-        <div>
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[13px] font-medium">
               {isFailed
@@ -269,10 +278,8 @@ export default function Processing({
                 : message || STAGES[currentStage]?.desc}
           </p>
         </div>
-      </div>
 
-      {/* Stages */}
-      <div className="glass-panel rounded-2xl p-6 mb-4">
+        {/* Stages */}
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
           {captions.processing.stagesTitle}
         </h3>
@@ -371,38 +378,6 @@ export default function Processing({
           </div>
         )}
       </div>
-
-      {/* Output files */}
-      {outputFiles.length > 0 && (
-        <div className="glass-panel rounded-2xl p-6 mb-4">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-            {captions.processing.outputsTitle}
-          </h3>
-          <div className="space-y-2">
-            {outputFiles.map((outputFile) => (
-              <div
-                key={outputFile.path}
-                className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-card/50 p-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-[13px] font-medium uppercase">{outputFile.format}</p>
-                  <p className="truncate font-mono text-[11px] text-muted-foreground">
-                    {outputFile.path}
-                  </p>
-                </div>
-                <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
-                  {formatBytes(outputFile.sizeBytes)}
-                </span>
-              </div>
-            ))}
-          </div>
-          {outputDirectory && (
-            <p className="mt-3 truncate font-mono text-[11px] text-muted-foreground">
-              {outputDirectory}
-            </p>
-          )}
-        </div>
-      )}
 
       {/* Actions */}
       <div className="flex items-center justify-between">

@@ -53,7 +53,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
   return {
     ready: true,
     status: 'System Ready',
-    activity: 'Idle',
+    activity: `v${app.getVersion()}`,
     metrics: [
       { label: 'CPU', value: primaryCpu },
       { label: 'GPU', value: primaryGpu },
