@@ -171,6 +171,24 @@ export const captions = {
         }
       ]
     },
+    catalog: {
+      title: 'Models',
+      subtitle: 'Browse, download, and manage OpenAI Whisper models',
+      installedBadge: 'Installed',
+      addedPrefix: 'Added',
+      filter: {
+        all: 'All',
+        installed: 'Installed',
+        available: 'Available'
+      },
+      empty: {
+        all: 'No models found',
+        installed: 'No models downloaded yet',
+        available: 'All models are downloaded',
+        search: 'No models match your search',
+        subtitle: 'Download a model to get started'
+      }
+    },
     downloaded: {
       title: 'Downloaded Models',
       summary: {

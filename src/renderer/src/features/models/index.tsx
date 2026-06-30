@@ -8,8 +8,7 @@ import type {
 } from '@shared/ipc'
 import { formatBytes } from '@/lib/utils'
 import { captions } from '@/lib/strings'
-import DownloadedModels from './components/download-models'
-import AvailableModels from './components/available-models'
+import ModelsCatalog from './components/models-catalog'
 import Prerequisites from './components/prerequisites'
 
 interface ModelsProps {
@@ -118,16 +117,13 @@ export default function Models({ desktop }: ModelsProps) {
         </div>
       </div>
       <Prerequisites desktop={desktop} onReadyChange={setPrerequisitesReady} />
-      <AvailableModels
+      <ModelsCatalog
         canDownload={prerequisitesReady}
         downloadProgress={downloadProgress}
         downloadedModels={downloadedModels.models}
-        onDownload={downloadAvailableModel}
-      />
-      <DownloadedModels
         isLoading={isLoadingDownloadedModels}
-        models={downloadedModels.models}
         onDelete={deleteDownloadedModel}
+        onDownload={downloadAvailableModel}
         onRefresh={() => void refreshDownloadedModels()}
         totalSizeBytes={downloadedModels.totalSizeBytes}
       />
