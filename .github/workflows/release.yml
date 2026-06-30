@@ -15,7 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
 
     steps:
       - name: Checkout
@@ -30,13 +36,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build installers
-        run: npm run dist
+      - name: Build
+        run: npm run build
+
+      - name: Build and publish installers
+        run: npx --no-install electron-builder --${{ matrix.platform }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: whisperstudio-${{ matrix.os }}
-          path: release/**

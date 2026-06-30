@@ -1,6 +1,6 @@
 {
   "name": "Whisper Studio",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Open-source Electron, React, and TypeScript desktop boilerplate for Whisper Studio.",
   "author": "Whisper Studio Contributors",
   "license": "MIT",
@@ -72,6 +72,12 @@
       "package.json"
     ],
     "asar": true,
+    "publish": [
+      {
+        "provider": "github",
+        "releaseType": "release"
+      }
+    ],
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
