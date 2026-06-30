@@ -18,6 +18,7 @@ const speedColor: Record<AvailableModel['speed'], string> = {
 }
 
 interface AvailableModelsProps {
+  canDownload: boolean
   downloadProgress: Record<string, WhisperModelDownloadProgress>
   downloadedModels: DownloadedWhisperModel[]
   onDownload: (repoId: string) => Promise<void>
@@ -48,6 +49,7 @@ function parseSize(size: string): number {
 }
 
 export default function AvailableModels({
+  canDownload,
   downloadProgress,
   downloadedModels,
   onDownload
@@ -98,6 +100,10 @@ export default function AvailableModels({
           <p className="text-[11px] text-muted-foreground mt-0.5">{availableCaptions.subtitle}</p>
         </div>
       </div>
+
+      {!canDownload && (
+        <p className="mb-4 text-[11px] leading-snug text-warning">{availableCaptions.blockedHint}</p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {availableModels.length === 0 ? (
@@ -182,6 +188,7 @@ export default function AvailableModels({
                     variant={model.recommended ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => void handleDownload(model)}
+                    disabled={!canDownload}
                     className="w-full gap-1.5 text-xs"
                   >
                     <Download className="w-3.5 h-3.5" />

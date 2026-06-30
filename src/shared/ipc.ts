@@ -50,12 +50,13 @@ export interface SystemStatus {
 
 export type PrerequisiteCheckId = 'python' | 'ffmpeg' | 'cuda' | 'openai-whisper' | 'torch'
 
-export type PrerequisiteCheckStatus = 'ok' | 'missing'
+export type PrerequisiteCheckStatus = 'ok' | 'missing' | 'unsupported' | 'attention'
 
 export interface PrerequisiteCheck {
   id: PrerequisiteCheckId
   installed: string | null
   status: PrerequisiteCheckStatus
+  detail?: string
 }
 
 export type PrerequisiteInstallAction = 'installed' | 'opened'

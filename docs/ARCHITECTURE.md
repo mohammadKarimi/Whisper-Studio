@@ -58,6 +58,89 @@ Generates content via export-generators (SRT / VTT / TXT / TSV)
 Saves via IPC: fs:write-text-file
 ```
 
+## Data Flow: Prerequisites & Model Gating
+
+The Models page checks system prerequisites, installs missing ones via the
+platform's package manager, and gates model downloads until Python and
+`openai-whisper` are present.
+
+### Check & gating flow
+
+```mermaid
+flowchart TD
+    A[Models page loads] --> B[refreshPrerequisites]
+    B --> C[desktop.getPrerequisites]
+    C --> D[checkPrerequisites in main]
+    D --> D1[checkPython]
+    D --> D2[checkCommandVersion ffmpeg]
+    D --> D3[checkPythonPackages: openai-whisper, torch]
+    D --> D4[checkCudaWithTorch]
+    D4 --> D5{platform == darwin?}
+    D5 -->|yes| D6[cuda = unsupported]
+    D5 -->|no| D7[cuda from torch runtime]
+    D1 & D2 & D3 & D6 & D7 --> E[Return PrerequisiteCheck array]
+
+    E --> F[Render cards per item]
+    F --> G{pythonOk AND whisperOk?}
+    G -->|yes| H[canDownload = true<br/>Download buttons enabled]
+    G -->|no| I[canDownload = false<br/>Download disabled + hint]
+```
+
+### Per-item install action
+
+```mermaid
+flowchart TD
+    A[Click Install on item] --> B{Python-dependent<br/>and Python missing?}
+    B -->|yes| C[Button disabled<br/>show 'Install Python first']
+    B -->|no| D[handleInstall id]
+    D --> E[status = installing]
+    E --> F[desktop.installPrerequisite id]
+
+    F --> G{Prerequisite type}
+    G -->|python / ffmpeg| H[installSystemPrerequisite]
+    G -->|openai-whisper / torch| I[installViaPip]
+    G -->|cuda| J[installCuda]
+
+    H --> H1{platform}
+    H1 -->|win32| H2[winget probe + install]
+    H1 -->|darwin| H3[brew probe + install]
+    H1 -->|linux| H4[apt-get / dnf probe + install]
+    H2 & H3 & H4 --> H5{manager found?}
+    H5 -->|no| H6[Open fallback download URL]
+    H5 -->|yes| H7[runDetailedCommand]
+
+    J --> J1{platform == darwin?}
+    J1 -->|yes| J2[Return unsupported message]
+    J1 -->|no| J3[pip install torch cu124]
+
+    H6 & H7 & I & J2 & J3 --> K[PrerequisiteInstallResult<br/>ok, stderr, stdout, command]
+    K --> L{result.ok and action installed?}
+    L -->|yes| M[refreshPrerequisites<br/>status flips to ok]
+    L -->|no| N[status = missing<br/>show stderr error]
+```
+
+### System install result resolution
+
+```mermaid
+sequenceDiagram
+    participant UI as Prerequisites UI
+    participant Main as installSystemPrerequisite
+    participant PM as Package manager
+    participant Shell as Browser
+
+    UI->>Main: installPrerequisite(ffmpeg)
+    Main->>PM: probe (winget/brew/apt --version)
+    alt manager available
+        Main->>PM: run install command
+        PM-->>Main: exitCode, stdout, stderr
+        Main-->>UI: { ok, stdout, stderr, command }
+    else no manager
+        Main->>Shell: openExternal(fallback URL)
+        Main-->>UI: { action: opened, ok: true }
+    end
+    UI->>UI: ok -> refresh; else show error
+```
+
 ## IPC Channel Namespaces
 
 All IPC channel names are constants in `src/shared/ipc.ts` under `IPC_CHANNELS`. They follow a `namespace:action` convention:

@@ -18,6 +18,7 @@ interface ModelsProps {
 
 export default function Models({ desktop }: ModelsProps) {
   const modelsCaptions = captions.models
+  const [prerequisitesReady, setPrerequisitesReady] = useState(false)
   const [downloadedModels, setDownloadedModels] = useState<DownloadedWhisperModelsResult>({
     models: [],
     totalSizeBytes: 0
@@ -114,19 +115,19 @@ export default function Models({ desktop }: ModelsProps) {
           </div>
         </div>
       </div>
-
-      <Prerequisites desktop={desktop} />
+      <Prerequisites desktop={desktop} onReadyChange={setPrerequisitesReady} />
+      <AvailableModels
+        canDownload={prerequisitesReady}
+        downloadProgress={downloadProgress}
+        downloadedModels={downloadedModels.models}
+        onDownload={downloadAvailableModel}
+      />
       <DownloadedModels
         isLoading={isLoadingDownloadedModels}
         models={downloadedModels.models}
         onDelete={deleteDownloadedModel}
         onRefresh={() => void refreshDownloadedModels()}
         totalSizeBytes={downloadedModels.totalSizeBytes}
-      />
-      <AvailableModels
-        downloadProgress={downloadProgress}
-        downloadedModels={downloadedModels.models}
-        onDownload={downloadAvailableModel}
       />
     </div>
   )

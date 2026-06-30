@@ -45,6 +45,123 @@ const installerUrls: Partial<Record<PrerequisiteCheckId, string>> = {
   cuda: 'https://developer.nvidia.com/cuda-downloads'
 }
 
+// Platform-specific fallback download pages used when no package manager is available.
+const fallbackInstallerUrls: Record<'darwin' | 'linux' | 'win32', Partial<Record<PrerequisiteCheckId, string>>> = {
+  win32: {
+    python: 'https://www.python.org/downloads/windows/',
+    ffmpeg: 'https://www.gyan.dev/ffmpeg/builds/'
+  },
+  darwin: {
+    python: 'https://www.python.org/downloads/macos/',
+    ffmpeg: 'https://ffmpeg.org/download.html#build-mac'
+  },
+  linux: {
+    python: 'https://www.python.org/downloads/source/',
+    ffmpeg: 'https://ffmpeg.org/download.html#build-linux'
+  }
+}
+
+// A single package-manager install attempt: probe the manager, then run the install command.
+type SystemInstallCandidate = {
+  probe: string
+  command: string
+  args: readonly string[]
+  label: string
+}
+
+// Per-platform install commands for system-level prerequisites. Ordered by preference;
+// the first candidate whose `probe` binary exists is used.
+const systemInstallers: Record<
+  'darwin' | 'linux' | 'win32',
+  Partial<Record<PrerequisiteCheckId, readonly SystemInstallCandidate[]>>
+> = {
+  win32: {
+    python: [
+      {
+        probe: 'winget',
+        command: 'winget',
+        args: [
+          'install', '-e', '--id', 'Python.Python.3.12',
+          '--accept-source-agreements', '--accept-package-agreements'
+        ],
+        label: 'winget'
+      }
+    ],
+    ffmpeg: [
+      {
+        probe: 'winget',
+        command: 'winget',
+        args: [
+          'install', '-e', '--id', 'Gyan.FFmpeg',
+          '--accept-source-agreements', '--accept-package-agreements'
+        ],
+        label: 'winget'
+      }
+    ]
+  },
+  darwin: {
+    python: [{ probe: 'brew', command: 'brew', args: ['install', 'python'], label: 'Homebrew' }],
+    ffmpeg: [{ probe: 'brew', command: 'brew', args: ['install', 'ffmpeg'], label: 'Homebrew' }]
+  },
+  linux: {
+    python: [
+      {
+        probe: 'apt-get',
+        command: 'sudo',
+        args: ['apt-get', 'install', '-y', 'python3', 'python3-pip'],
+        label: 'apt-get'
+      },
+      {
+        probe: 'dnf',
+        command: 'sudo',
+        args: ['dnf', 'install', '-y', 'python3', 'python3-pip'],
+        label: 'dnf'
+      }
+    ],
+    ffmpeg: [
+      {
+        probe: 'apt-get',
+        command: 'sudo',
+        args: ['apt-get', 'install', '-y', 'ffmpeg'],
+        label: 'apt-get'
+      },
+      { probe: 'dnf', command: 'sudo', args: ['dnf', 'install', '-y', 'ffmpeg'], label: 'dnf' }
+    ]
+  }
+}
+
+function getInstallPlatform(): 'darwin' | 'linux' | 'win32' | null {
+  if (process.platform === 'win32' || process.platform === 'darwin' || process.platform === 'linux') {
+    return process.platform
+  }
+
+  return null
+}
+
+// Pure resolver (no side effects) so platform install selection is unit-testable.
+export function resolveSystemInstallCandidates(
+  platform: NodeJS.Platform,
+  id: PrerequisiteCheckId
+): readonly SystemInstallCandidate[] {
+  if (platform === 'win32' || platform === 'darwin' || platform === 'linux') {
+    return systemInstallers[platform][id] ?? []
+  }
+
+  return []
+}
+
+export function resolveFallbackInstallerUrl(
+  platform: NodeJS.Platform,
+  id: PrerequisiteCheckId
+): string | null {
+  const platformUrl =
+    platform === 'win32' || platform === 'darwin' || platform === 'linux'
+      ? fallbackInstallerUrls[platform]?.[id]
+      : undefined
+
+  return platformUrl ?? installerUrls[id] ?? null
+}
+
 const CUDA_TORCH_INDEX_URL = 'https://download.pytorch.org/whl/cu124'
 
 function runCommand(
@@ -234,9 +351,55 @@ async function checkPythonPackages(python: CommandResult | null): Promise<Prereq
   )
 }
 
-async function checkCudaWithTorch(python: CommandResult | null): Promise<PrerequisiteCheck> {
-  if (!python) {
+type CudaToolkitInfo = {
+  source: 'nvidia-smi' | 'nvcc'
+  version: string | null
+}
+
+// Detects an installed NVIDIA driver / CUDA toolkit independently of PyTorch.
+// `nvidia-smi` reports the driver's max supported CUDA version; `nvcc` reports
+// the installed CUDA Toolkit compiler version.
+async function detectCudaToolkit(): Promise<CudaToolkitInfo | null> {
+  if (process.platform === 'darwin') {
+    return null
+  }
+
+  const smi = await runCommand('nvidia-smi', [], 4000)
+
+  if (smi) {
+    return { source: 'nvidia-smi', version: smi.match(/CUDA Version:\s*([\d.]+)/i)?.[1] ?? null }
+  }
+
+  const nvcc = await runCommand('nvcc', ['--version'], 4000)
+
+  if (nvcc) {
+    return { source: 'nvcc', version: nvcc.match(/release\s*([\d.]+)/i)?.[1] ?? null }
+  }
+
+  return null
+}
+
+// Builds a CUDA check result when PyTorch cannot use the GPU. If a toolkit/driver
+// is present, surface an actionable hint instead of a flat "missing".
+function cudaResultFromToolkit(toolkit: CudaToolkitInfo | null): PrerequisiteCheck {
+  if (!toolkit) {
     return { id: 'cuda', installed: null, status: 'missing' }
+  }
+
+  return {
+    id: 'cuda',
+    installed: toolkit.version ?? 'detected',
+    status: 'attention',
+    detail:
+      'CUDA detected, but PyTorch is CPU-only. Reinstall the CUDA build of PyTorch to enable GPU acceleration.'
+  }
+}
+
+async function checkCudaWithTorch(python: CommandResult | null): Promise<PrerequisiteCheck> {
+  const toolkit = await detectCudaToolkit()
+
+  if (!python) {
+    return cudaResultFromToolkit(toolkit)
   }
 
   const code = [
@@ -259,23 +422,23 @@ async function checkCudaWithTorch(python: CommandResult | null): Promise<Prerequ
       .find((line) => line.startsWith('{') && line.endsWith('}')) ?? null
 
   if (!jsonLine) {
-    return { id: 'cuda', installed: null, status: 'missing' }
+    return cudaResultFromToolkit(toolkit)
   }
 
   try {
     const parsed = JSON.parse(jsonLine) as { available?: boolean; cuda?: string | null }
 
     if (!parsed.available) {
-      return { id: 'cuda', installed: null, status: 'missing' }
+      return cudaResultFromToolkit(toolkit)
     }
 
     return {
       id: 'cuda',
-      installed: parsed.cuda ?? 'detected',
+      installed: parsed.cuda ?? toolkit?.version ?? 'detected',
       status: 'ok'
     }
   } catch {
-    return { id: 'cuda', installed: null, status: 'missing' }
+    return cudaResultFromToolkit(toolkit)
   }
 }
 
@@ -288,7 +451,11 @@ async function checkPrerequisites(): Promise<PrerequisiteCheck[]> {
   ])
 
   // For Whisper GPU execution, runtime CUDA availability in torch is the source of truth.
-  const cudaCheck = cudaByTorchCheck
+  // CUDA is not available on macOS (no NVIDIA GPUs on Apple Silicon / modern Macs).
+  const cudaCheck: PrerequisiteCheck =
+    process.platform === 'darwin'
+      ? { id: 'cuda', installed: null, status: 'unsupported' }
+      : cudaByTorchCheck
   const checks = [pythonCheck, ffmpegCheck, cudaCheck, ...pythonPackageChecks]
 
   return prerequisiteIds.map(
@@ -344,8 +511,71 @@ async function installViaUrl(
   return { action: 'opened', id, ok: true }
 }
 
+function getFallbackInstallerUrl(id: PrerequisiteCheckId): string | null {
+  const platform = getInstallPlatform()
+
+  return resolveFallbackInstallerUrl(platform ?? process.platform, id)
+}
+
+// Installs a system-level prerequisite using the platform's package manager.
+// Falls back to opening a download page when no supported manager is available.
+async function installSystemPrerequisite(
+  id: PrerequisiteCheckId
+): Promise<PrerequisiteInstallResult> {
+  const platform = getInstallPlatform()
+  const candidates = platform ? resolveSystemInstallCandidates(platform, id) : []
+  const fallbackUrl = getFallbackInstallerUrl(id)
+
+  for (const candidate of candidates) {
+    const probed = await runCommand(candidate.probe, ['--version'], 4000)
+
+    if (!probed) {
+      continue
+    }
+
+    const result = await runDetailedCommand(candidate.command, candidate.args)
+    const command = `${candidate.command} ${candidate.args.join(' ')}`
+    clearPrerequisiteCache()
+
+    return {
+      action: 'installed',
+      command,
+      id,
+      ok: result.exitCode === 0,
+      stderr:
+        result.exitCode === 0
+          ? result.stderr
+          : result.stderr || `Installation via ${candidate.label} failed.`,
+      stdout: result.stdout
+    }
+  }
+
+  // No package manager found — open the platform download page instead.
+  if (fallbackUrl) {
+    return installViaUrl(id, fallbackUrl)
+  }
+
+  return {
+    action: 'opened',
+    id,
+    ok: false,
+    stderr: 'No supported package manager was found for this platform.'
+  }
+}
+
 async function installCuda(): Promise<PrerequisiteInstallResult> {
   const id: PrerequisiteCheckId = 'cuda'
+
+  if (process.platform === 'darwin') {
+    return {
+      action: 'installed',
+      id,
+      ok: false,
+      stderr:
+        'CUDA is not available on macOS. Whisper runs on CPU (or Apple GPU via supported backends) on this platform.'
+    }
+  }
+
   const python = await findPython()
 
   if (!python) {
@@ -390,8 +620,8 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
 type Installer = () => Promise<PrerequisiteInstallResult>
 
 const INSTALLERS: Record<PrerequisiteCheckId, Installer> = {
-  python: () => installViaUrl('python', installerUrls.python as string),
-  ffmpeg: () => installViaUrl('ffmpeg', installerUrls.ffmpeg as string),
+  python: () => installSystemPrerequisite('python'),
+  ffmpeg: () => installSystemPrerequisite('ffmpeg'),
   cuda: () => installCuda(),
   'openai-whisper': () => installViaPip('openai-whisper', pipInstallPackages['openai-whisper'] as string),
   torch: () => installViaPip('torch', pipInstallPackages.torch as string)
