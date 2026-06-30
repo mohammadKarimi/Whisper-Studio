@@ -216,20 +216,23 @@ export default function ModelsCatalog({
 
     const orphans = downloadedModels
       .filter((model) => !matchedIds.has(model.id))
-      .map((model) => ({
-        key: `installed-${model.id}`,
-        name: model.name,
-        repoId: model.source,
-        desc: '',
-        sizeLabel: formatBytes(model.sizeBytes),
-        sizeBytes: model.sizeBytes,
-        params: model.params,
-        languages: model.languages,
-        speed: null,
-        accuracy: null,
-        recommended: false,
-        installed: model
-      } satisfies CatalogEntry))
+      .map(
+        (model) =>
+          ({
+            key: `installed-${model.id}`,
+            name: model.name,
+            repoId: model.source,
+            desc: '',
+            sizeLabel: formatBytes(model.sizeBytes),
+            sizeBytes: model.sizeBytes,
+            params: model.params,
+            languages: model.languages,
+            speed: null,
+            accuracy: null,
+            recommended: false,
+            installed: model
+          }) satisfies CatalogEntry
+      )
 
     return [...fromCatalog, ...orphans]
   }, [downloadedModels])
@@ -265,7 +268,9 @@ export default function ModelsCatalog({
         sorted.sort((a, b) => b.sizeBytes - a.sizeBytes)
         break
       case 'speed':
-        sorted.sort((a, b) => (b.speed ? speedRank[b.speed] : 0) - (a.speed ? speedRank[a.speed] : 0))
+        sorted.sort(
+          (a, b) => (b.speed ? speedRank[b.speed] : 0) - (a.speed ? speedRank[a.speed] : 0)
+        )
         break
       case 'accuracy':
         sorted.sort(
