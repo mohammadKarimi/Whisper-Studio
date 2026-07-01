@@ -38,6 +38,8 @@ const progressByPhase: Partial<Record<WhisperProgressPhase, number>> = {
   error: 100
 }
 
+const ASR_LOG_SEPARATOR = '\x00asr-separator'
+
 function formatLogLine(source: string, text: string): string {
   const timestamp = new Date().toLocaleTimeString()
   return `[${timestamp}] ${source}: ${text}`
@@ -48,6 +50,50 @@ interface ProcessingProps {
   file: TranscriptionFile | null
   outputFormats: string[]
   settings: TranscriptionSettings
+}
+
+interface StageItemProps {
+  isDone: boolean
+  isActive: boolean
+  stage: (typeof STAGES)[number]
+}
+
+function StageItem({ stage, isDone, isActive }: StageItemProps): JSX.Element {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="shrink-0">
+        {isDone ? (
+          <CheckCircle2 className="w-5 h-5 text-success" />
+        ) : isActive ? (
+          <Loader2 className="w-5 h-5 text-primary animate-spin" />
+        ) : (
+          <Circle className="w-5 h-5 text-muted-foreground/30" />
+        )}
+      </div>
+      <div className="flex-1">
+        <p
+          className={`text-[13px] font-medium ${isDone || isActive ? 'text-foreground' : 'text-muted-foreground/50'}`}
+        >
+          {stage.label}
+        </p>
+        <p
+          className={`text-[11px] ${isDone || isActive ? 'text-muted-foreground' : 'text-muted-foreground/30'}`}
+        >
+          {stage.desc}
+        </p>
+      </div>
+      {isDone && (
+        <span className="text-[11px] text-success font-mono">
+          {captions.processing.stageStatus.done}
+        </span>
+      )}
+      {isActive && (
+        <span className="text-[11px] text-primary font-mono">
+          {captions.processing.stageStatus.running}
+        </span>
+      )}
+    </div>
+  )
 }
 
 export default function Processing({
@@ -64,10 +110,12 @@ export default function Processing({
   const [commands, setCommands] = useState<string[]>([])
   const [logs, setLogs] = useState<string[]>([])
   const [logsOpen, setLogsOpen] = useState(false)
+  const [commandsOpen, setCommandsOpen] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const { navigateTo } = useAppRoute()
   const { setRecord } = useStudioContext()
   const hasStarted = useRef(false)
+  const asrSeparatorAdded = useRef(false)
   const logsEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -109,6 +157,11 @@ export default function Processing({
         setCommands((current) =>
           current.includes(update.message) ? current : [...current, update.message]
         )
+      }
+
+      if (update.phase === 'transcribing' && !asrSeparatorAdded.current) {
+        asrSeparatorAdded.current = true
+        setLogs((current) => [...current, ASR_LOG_SEPARATOR])
       }
 
       if (update.state === 'error') {
@@ -285,48 +338,47 @@ export default function Processing({
         </h3>
         <div className="space-y-3">
           {STAGES.map((stage, i) => {
-            const stageIsActive = i === currentStage && !isComplete && !isFailed
+            const isActive = i === currentStage && !isComplete && !isFailed
             const isDone = (i < currentStage || isComplete) && !isFailed
-            return (
-              <div key={stage.id} className="flex items-center gap-3">
-                <div className="shrink-0">
-                  {isDone ? (
-                    <CheckCircle2 className="w-5 h-5 text-success" />
-                  ) : stageIsActive ? (
-                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground/30" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p
-                    className={`text-[13px] font-medium ${isDone || stageIsActive ? 'text-foreground' : 'text-muted-foreground/50'}`}
-                  >
-                    {stage.label}
-                  </p>
-                  <p
-                    className={`text-[11px] ${isDone || stageIsActive ? 'text-muted-foreground' : 'text-muted-foreground/30'}`}
-                  >
-                    {stage.desc}
-                  </p>
-                </div>
-                {isDone && (
-                  <span className="text-[11px] text-success font-mono">
-                    {captions.processing.stageStatus.done}
-                  </span>
-                )}
-                {stageIsActive && (
-                  <span className="text-[11px] text-primary font-mono">
-                    {captions.processing.stageStatus.running}
-                  </span>
-                )}
-              </div>
-            )
+            return <StageItem key={stage.id} stage={stage} isDone={isDone} isActive={isActive} />
           })}
         </div>
       </div>
 
-      {/* Collapsible logs */}
+      {/* Command Log — shown only once the whisper command is known */}
+      {commands.length > 0 && (
+        <div className="glass-panel rounded-2xl mb-3 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setCommandsOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-secondary/40 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {captions.processing.commandLogTitle}
+              </span>
+            </div>
+            <ChevronDown
+              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${commandsOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {commandsOpen && (
+            <div className="px-5 pb-4 pt-3 border-t border-border/40 space-y-1.5">
+              {commands.map((command, index) => (
+                <pre
+                  key={`${command}-${index}`}
+                  className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border/50 bg-card/50 p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground"
+                >
+                  {command}
+                </pre>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Diagnostic Log */}
       <div className="glass-panel rounded-2xl mb-4 overflow-hidden">
         <button
           type="button"
@@ -339,7 +391,8 @@ export default function Processing({
               {captions.processing.diagnosticLogTitle}
             </span>
             <span className="text-[10px] font-mono text-muted-foreground/60">
-              ({logs.length} {captions.processing.logs.entries})
+              ({logs.filter((l) => l !== ASR_LOG_SEPARATOR).length}{' '}
+              {captions.processing.logs.entries})
             </span>
           </div>
           <ChevronDown
@@ -349,29 +402,27 @@ export default function Processing({
 
         {logsOpen && (
           <div className="px-5 pb-4 border-t border-border/40">
-            {commands.length > 0 && (
-              <div className="pt-3 pb-2 space-y-1.5">
-                {commands.map((command, index) => (
-                  <pre
-                    key={`${command}-${index}`}
-                    className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border/50 bg-card/50 p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground"
-                  >
-                    {command}
-                  </pre>
-                ))}
-              </div>
-            )}
             {logs.length === 0 ? (
               <p className="pt-3 font-mono text-[11px] text-muted-foreground">
                 {captions.processing.logs.waiting}
               </p>
             ) : (
-              <div className="pt-3 max-h-[240px] space-y-0.5 overflow-y-auto font-mono text-[11px] text-muted-foreground">
-                {logs.map((line, index) => (
-                  <p key={`${line}-${index}`} className="break-words leading-relaxed">
-                    {line}
-                  </p>
-                ))}
+              <div className="pt-3 max-h-[240px] overflow-y-auto font-mono text-[11px] text-muted-foreground">
+                {logs.map((line, index) =>
+                  line === ASR_LOG_SEPARATOR ? (
+                    <div key={index} className="flex items-center gap-2 my-4">
+                      <div className="flex-1 h-px bg-border/50" />
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/50">
+                        Speech recognition output
+                      </span>
+                      <div className="flex-1 h-px bg-border/50" />
+                    </div>
+                  ) : (
+                    <p key={`${line}-${index}`} className="break-words leading-relaxed mt-4">
+                      {line}
+                    </p>
+                  )
+                )}
                 <div ref={logsEndRef} />
               </div>
             )}
