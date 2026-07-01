@@ -21,7 +21,11 @@ export const IPC_CHANNELS = {
   deleteTranscription: 'transcriptions:delete',
   readTextFile: 'fs:read-text-file',
   writeTextFile: 'fs:write-text-file',
-  selectDirectory: 'fs:select-directory'
+  selectDirectory: 'fs:select-directory',
+  settingsGet: 'settings:get',
+  settingsSet: 'settings:set',
+  appCheckUpdate: 'app:check-update',
+  shellOpenExternal: 'shell:open-external'
 } as const
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS]
@@ -234,5 +238,37 @@ export interface WindowControlsApi {
   }
 }
 
+/** Persisted user preferences. */
+export interface AppSettings {
+  defaultModel: string | null
+  defaultLanguage: string
+  defaultTask: 'transcribe' | 'translate'
+  defaultCompute: 'cpu' | 'cuda' | 'auto'
+  defaultOutputDirectory: string | null
+  defaultExportFormats: string[]
+}
+
+/** Result returned by the update check IPC call. */
+export interface UpdateCheckResult {
+  currentVersion: string
+  hasUpdate: boolean
+  latestVersion: string
+  releaseUrl: string
+  releaseName: string
+}
+
+/** Settings persistence, update check, and shell utilities. */
+export interface SettingsApi {
+  getSettings: () => Promise<AppSettings>
+  setSettings: (patch: Partial<AppSettings>) => Promise<void>
+  checkForUpdates: () => Promise<UpdateCheckResult>
+  openExternal: (url: string) => Promise<void>
+}
+
 /** Full desktop API exposed by the preload bridge. Composed from all sub-interfaces. */
-export type DesktopApi = AppApi & ModelApi & TranscriptionApi & FileSystemApi & WindowControlsApi
+export type DesktopApi = AppApi &
+  ModelApi &
+  TranscriptionApi &
+  FileSystemApi &
+  WindowControlsApi &
+  SettingsApi

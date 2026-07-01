@@ -15,6 +15,7 @@ export const captions = {
   sidebar: {
     searchPlaceholder: 'Search…',
     settings: 'Settings',
+    reportBug: 'Report a Bug',
     expand: 'Expand',
     collapse: 'Collapse',
     theme: {

@@ -17,7 +17,7 @@ export function AppRouteView({ activeRoute, desktop }: AppRouteViewProps): JSX.E
     case 'new':
       return <NewTranscription desktop={desktop} />
     case 'settings':
-      return <SettingsPage />
+      return <SettingsPage desktop={desktop} />
     case 'studio':
       return <Studio desktop={desktop} />
     case 'export':

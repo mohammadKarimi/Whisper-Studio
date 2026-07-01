@@ -3,6 +3,7 @@ import {
   IPC_CHANNELS,
   type AppApi,
   type AppInfo,
+  type AppSettings,
   type DesktopApi,
   type DesktopPlatform,
   type DownloadedWhisperModelsResult,
@@ -11,9 +12,11 @@ import {
   type PrerequisiteCheck,
   type PrerequisiteCheckId,
   type PrerequisiteInstallResult,
+  type SettingsApi,
   type SystemStatus,
   type TranscriptionApi,
   type TranscriptionRecord,
+  type UpdateCheckResult,
   type WhisperFileSelection,
   type WhisperModelActionResult,
   type WhisperModelDownloadProgress,
@@ -107,12 +110,23 @@ const windowControlsApi: WindowControlsApi = {
   }
 }
 
+const settingsApi: SettingsApi = {
+  getSettings: () => ipcRenderer.invoke(IPC_CHANNELS.settingsGet) as Promise<AppSettings>,
+  setSettings: (patch: Partial<AppSettings>) =>
+    ipcRenderer.invoke(IPC_CHANNELS.settingsSet, patch) as Promise<void>,
+  checkForUpdates: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.appCheckUpdate) as Promise<UpdateCheckResult>,
+  openExternal: (url: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.shellOpenExternal, url) as Promise<void>
+}
+
 const desktopApi: DesktopApi = {
   ...appApi,
   ...modelApi,
   ...transcriptionApi,
   ...fileSystemApi,
-  ...windowControlsApi
+  ...windowControlsApi,
+  ...settingsApi
 }
 
 contextBridge.exposeInMainWorld('desktop', desktopApi)

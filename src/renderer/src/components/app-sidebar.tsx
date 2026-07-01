@@ -9,7 +9,8 @@ import {
   Sun,
   Brain,
   PanelRight,
-  PanelLeft
+  PanelLeft,
+  Bug
 } from 'lucide-react'
 
 import type { AppRouteId } from '@/app/routing'
@@ -188,26 +189,63 @@ export function AppSidebar({ activeRoute, onNavigate }: AppSidebarProps): JSX.El
         )}
       </div>
 
-      {/* Settings + collapse */}
-      <div className="px-3 pb-3 pt-1 flex items-center gap-0.5">
+      {/* Settings + Report a Bug */}
+
+      <div className="px-3 pb-1 pt-1">
         {collapsed ? (
           <Tooltip className="w-full">
             <TooltipTrigger
-              onClick={() => onNavigate('settings')}
+              onClick={() =>
+                void window.desktop?.openExternal(
+                  'https://github.com/mohammadKarimi/Whisper-Studio/issues'
+                )
+              }
               className="flex w-full justify-center px-3 py-2 rounded-lg text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
             >
-              <Settings className="w-4 h-4 shrink-0" />
+              <Bug className="w-4 h-4 shrink-0" />
             </TooltipTrigger>
-            <TooltipContent side="right">{captions.sidebar.settings}</TooltipContent>
+            <TooltipContent side="right">{captions.sidebar.reportBug}</TooltipContent>
           </Tooltip>
         ) : (
-          <button
-            onClick={() => onNavigate('settings')}
-            className="flex flex-1 items-center gap-3 px-3 py-2 rounded-lg text-left text-[13px] font-medium text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
-          >
-            <Settings className="w-4 h-4 shrink-0" />
-            <span>{captions.sidebar.settings}</span>
-          </button>
+          <>
+            <button
+              onClick={() =>
+                void window.desktop?.openExternal(
+                  'https://github.com/mohammadKarimi/Whisper-Studio/issues'
+                )
+              }
+              className="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-left text-[13px] font-medium text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
+            >
+              <Bug className="w-4 h-4 shrink-0" />
+              <span>{captions.sidebar.reportBug}</span>
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="px-3 pb-1 pt-1">
+        {collapsed ? (
+          <>
+            <Tooltip className="w-full">
+              <TooltipTrigger
+                onClick={() => onNavigate('settings')}
+                className="flex w-full justify-center px-3 py-2 rounded-lg text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
+              >
+                <Settings className="w-4 h-4 shrink-0" />
+              </TooltipTrigger>
+              <TooltipContent side="right">{captions.sidebar.settings}</TooltipContent>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => onNavigate('settings')}
+              className="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-left text-[13px] font-medium text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-colors"
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>{captions.sidebar.settings}</span>
+            </button>
+          </>
         )}
       </div>
     </aside>
