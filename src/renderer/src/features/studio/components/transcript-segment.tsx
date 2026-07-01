@@ -100,6 +100,13 @@ export default function TranscriptSegment({
             value={text}
             autoFocus
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault()
+                setEditing(false)
+                if (text !== seg.text) onTextChange?.(seg.id, text)
+              }
+            }}
             onBlur={() => {
               setEditing(false)
               if (text !== seg.text) onTextChange?.(seg.id, text)
@@ -108,7 +115,15 @@ export default function TranscriptSegment({
             rows={3}
           />
         ) : (
-          <p className="text-[13px] leading-relaxed text-foreground/90">{renderText(text)}</p>
+          <p
+            className="text-[13px] leading-relaxed text-foreground/90"
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              setEditing(true)
+            }}
+          >
+            {renderText(text)}
+          </p>
         )}
       </div>
 
