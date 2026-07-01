@@ -15,8 +15,8 @@
 
 <img alt="image 36" src="/screenshots/first.png" />
 <img  alt="Screenshot 2026-06-29 191632" src="/screenshots/second.png" />
-<img width="3840" height="2280" alt="image 38" src="/screenshots/forth.png" />
 <img width="3840" height="2280" alt="image 38" src="/screenshots/fifth.png" />
+<img width="3840" height="2280" alt="image 38" src="/screenshots/forth.png" />
 
 <br/>
 A cross-platform desktop application for AI-powered audio and video transcription using [OpenAI Whisper](https://github.com/openai/whisper). Built with Electron, React, TypeScript, and Vite.
