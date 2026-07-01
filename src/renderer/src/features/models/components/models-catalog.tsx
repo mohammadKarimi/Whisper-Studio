@@ -10,7 +10,8 @@ import {
   Search,
   CheckCircle2,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react'
 import type { DownloadedWhisperModel, WhisperModelDownloadProgress } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
@@ -436,204 +437,222 @@ export default function ModelsCatalog({
         </div>
       </div>
 
-      {!canDownload && (
-        <p className="mb-4 text-xs leading-snug text-warning">{availableCaptions.blockedHint}</p>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visibleEntries.length === 0 ? (
-          <div className="glass-panel col-span-full rounded-2xl p-10 text-center">
-            <Boxes className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-            {!search.trim() && filter !== 'installed' && (
-              <p className="text-xs text-muted-foreground/60 mt-1">
-                {catalogCaptions.empty.subtitle}
-              </p>
-            )}
+      {/* When prerequisites are missing, blur the catalog and overlay a hint
+          instead of pushing an inline warning above the models. */}
+      <div className="relative">
+        {!canDownload && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/40 backdrop-blur-sm">
+            <div className="flex max-w-sm flex-col items-center gap-2 rounded-2xl border border-border/50 bg-card/90 px-6 py-5 text-center shadow-lg">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+                <Lock className="h-5 w-5 text-warning" />
+              </div>
+              <p className="text-sm font-medium text-foreground">{availableCaptions.blockedHint}</p>
+            </div>
           </div>
-        ) : (
-          visibleEntries.map((entry) => {
-            const isInstalled = Boolean(entry.installed)
-            const isDownloading = downloadingRepos.has(entry.repoId)
-            const isDeleting = entry.installed ? deletingIds.has(entry.installed.id) : false
-            const progress = downloadProgress[entry.repoId]
-            const downloadedBytes = progress?.downloadedBytes ?? 0
-            const progressPercent =
-              entry.sizeBytes > 0
-                ? Math.min(Math.round((downloadedBytes / entry.sizeBytes) * 100), 100)
-                : 0
-            const speed = speedByRepo[entry.repoId] ?? 0
-            const etaSeconds =
-              speed > 0 && entry.sizeBytes > downloadedBytes
-                ? (entry.sizeBytes - downloadedBytes) / speed
-                : 0
+        )}
 
-            return (
-              <div
-                key={entry.key}
-                className={`relative flex flex-col rounded-2xl border bg-card p-5 transition-all ${
-                  isInstalled
-                    ? 'border-success/30'
-                    : entry.recommended
-                      ? 'border-primary/30'
-                      : 'border-border/40 hover:border-border/70'
-                }`}
-              >
-                {entry.recommended && !isInstalled && (
-                  <div className="absolute -top-2.5 left-4 flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
-                    <Star className="w-2.5 h-2.5" /> {availableCaptions.recommended}
-                  </div>
-                )}
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 ${
+            canDownload ? '' : 'pointer-events-none select-none'
+          }`}
+          aria-hidden={!canDownload}
+        >
+          {visibleEntries.length === 0 ? (
+            <div className="glass-panel col-span-full rounded-2xl p-10 text-center">
+              <Boxes className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+              {!search.trim() && filter !== 'installed' && (
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  {catalogCaptions.empty.subtitle}
+                </p>
+              )}
+            </div>
+          ) : (
+            visibleEntries.map((entry) => {
+              const isInstalled = Boolean(entry.installed)
+              const isDownloading = downloadingRepos.has(entry.repoId)
+              const isDeleting = entry.installed ? deletingIds.has(entry.installed.id) : false
+              const progress = downloadProgress[entry.repoId]
+              const downloadedBytes = progress?.downloadedBytes ?? 0
+              const progressPercent =
+                entry.sizeBytes > 0
+                  ? Math.min(Math.round((downloadedBytes / entry.sizeBytes) * 100), 100)
+                  : 0
+              const speed = speedByRepo[entry.repoId] ?? 0
+              const etaSeconds =
+                speed > 0 && entry.sizeBytes > downloadedBytes
+                  ? (entry.sizeBytes - downloadedBytes) / speed
+                  : 0
 
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold font-mono">{entry.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{entry.sizeLabel}</p>
-                  </div>
-                  {isInstalled ? (
-                    <span className="flex items-center gap-1 text-xs font-medium text-success">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {catalogCaptions.installedBadge}
-                    </span>
-                  ) : (
-                    entry.speed && (
-                      <span className={`text-xs font-medium ${speedColor[entry.speed]}`}>
-                        {entry.speed}
-                      </span>
-                    )
-                  )}
-                </div>
-
-                {entry.desc && (
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-4 flex-1">
-                    {entry.desc}
-                  </p>
-                )}
-
+              return (
                 <div
-                  className={`flex items-center gap-3 mb-4 text-xs text-muted-foreground ${
-                    entry.desc ? '' : 'flex-1'
+                  key={entry.key}
+                  className={`relative flex flex-col rounded-2xl border bg-card p-5 transition-all ${
+                    isInstalled
+                      ? 'border-success/30'
+                      : entry.recommended
+                        ? 'border-primary/30'
+                        : 'border-border/40 hover:border-border/70'
                   }`}
                 >
-                  <span className="flex items-center gap-1">
-                    <Cpu className="w-3 h-3" /> {entry.params}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Languages className="w-3 h-3" /> {entry.languages}
-                  </span>
-                  {entry.accuracy && (
-                    <span className="flex items-center gap-1">
-                      <Zap className="w-3 h-3" /> {entry.accuracy}
-                    </span>
+                  {entry.recommended && !isInstalled && canDownload && (
+                    <div className="absolute -top-2.5 right-4 flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
+                      <Star className="w-2.5 h-2.5" /> {availableCaptions.recommended}
+                    </div>
                   )}
-                </div>
 
-                {isDownloading ? (
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="flex items-center gap-1.5 text-xs text-primary">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        {availableCaptions.actions.downloading}
-                      </span>
-                      <span className="text-xs font-mono text-primary">
-                        {formatBytes(downloadedBytes)} / {entry.sizeLabel}
-                      </span>
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-semibold font-mono">{entry.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{entry.sizeLabel}</p>
                     </div>
-                    <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full"
-                        style={{ width: `${Math.max(progressPercent, downloadedBytes ? 4 : 0)}%` }}
-                      />
-                    </div>
-                    {speed > 0 && (
-                      <div className="flex items-center justify-between mt-1.5 text-[11px] font-mono text-muted-foreground">
-                        <span>{formatBytes(speed)}/s</span>
-                        {etaSeconds > 0 && (
-                          <span>
-                            {availableCaptions.etaPrefix} {secondsToDisplay(etaSeconds)}
-                          </span>
-                        )}
-                      </div>
+                    {isInstalled ? (
+                      <span className="flex items-center gap-1 text-xs font-medium text-success">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {catalogCaptions.installedBadge}
+                      </span>
+                    ) : (
+                      entry.speed && (
+                        <span className={`text-xs font-medium ${speedColor[entry.speed]}`}>
+                          {entry.speed}
+                        </span>
+                      )
                     )}
                   </div>
-                ) : isInstalled && entry.installed ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-muted-foreground">
-                      {entry.installed.downloadedAt
-                        ? `${catalogCaptions.addedPrefix} ${formatDownloadedDate(entry.installed.downloadedAt)}`
-                        : ''}
+
+                  {entry.desc && (
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-4 flex-1">
+                      {entry.desc}
+                    </p>
+                  )}
+
+                  <div
+                    className={`flex items-center gap-3 mb-4 text-xs text-muted-foreground ${
+                      entry.desc ? '' : 'flex-1'
+                    }`}
+                  >
+                    <span className="flex items-center gap-1">
+                      <Cpu className="w-3 h-3" /> {entry.params}
                     </span>
-                    {confirmingKey === entry.key ? (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => void handleDelete(entry)}
-                          disabled={isDeleting}
-                          className="h-8 gap-1.5 text-xs"
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
-                          {downloadedCaptions.actions.confirm}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setConfirmingKey(null)}
-                          disabled={isDeleting}
-                          className="h-8 text-xs text-muted-foreground"
-                        >
-                          {downloadedCaptions.actions.cancel}
-                        </Button>
+                    <span className="flex items-center gap-1">
+                      <Languages className="w-3 h-3" /> {entry.languages}
+                    </span>
+                    {entry.accuracy && (
+                      <span className="flex items-center gap-1">
+                        <Zap className="w-3 h-3" /> {entry.accuracy}
+                      </span>
+                    )}
+                  </div>
+
+                  {isDownloading ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="flex items-center gap-1.5 text-xs text-primary">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          {availableCaptions.actions.downloading}
+                        </span>
+                        <span className="text-xs font-mono text-primary">
+                          {formatBytes(downloadedBytes)} / {entry.sizeLabel}
+                        </span>
                       </div>
-                    ) : (
-                      <Tooltip>
-                        <TooltipTrigger>
+                      <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full"
+                          style={{
+                            width: `${Math.max(progressPercent, downloadedBytes ? 4 : 0)}%`
+                          }}
+                        />
+                      </div>
+                      {speed > 0 && (
+                        <div className="flex items-center justify-between mt-1.5 text-[11px] font-mono text-muted-foreground">
+                          <span>{formatBytes(speed)}/s</span>
+                          {etaSeconds > 0 && (
+                            <span>
+                              {availableCaptions.etaPrefix} {secondsToDisplay(etaSeconds)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : isInstalled && entry.installed ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-muted-foreground">
+                        {entry.installed.downloadedAt
+                          ? `${catalogCaptions.addedPrefix} ${formatDownloadedDate(entry.installed.downloadedAt)}`
+                          : ''}
+                      </span>
+                      {confirmingKey === entry.key ? (
+                        <div className="flex items-center gap-1">
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setConfirmingKey(entry.key)}
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => void handleDelete(entry)}
                             disabled={isDeleting}
-                            title={downloadedCaptions.actions.delete}
-                            aria-label={downloadedCaptions.actions.delete}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            className="h-8 gap-1.5 text-xs"
                           >
                             {isDeleting ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             ) : (
                               <Trash2 className="w-3.5 h-3.5" />
                             )}
+                            {downloadedCaptions.actions.confirm}
                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                ) : (
-                  <Button
-                    variant={entry.recommended ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => void handleDownload(entry)}
-                    disabled={!canDownload}
-                    className="w-full gap-1.5 text-xs"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    {availableCaptions.actions.download}
-                  </Button>
-                )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmingKey(null)}
+                            disabled={isDeleting}
+                            className="h-8 text-xs text-muted-foreground"
+                          >
+                            {downloadedCaptions.actions.cancel}
+                          </Button>
+                        </div>
+                      ) : (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setConfirmingKey(entry.key)}
+                              disabled={isDeleting}
+                              title={downloadedCaptions.actions.delete}
+                              aria-label={downloadedCaptions.actions.delete}
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            >
+                              {isDeleting ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  ) : (
+                    <Button
+                      variant={entry.recommended ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => void handleDownload(entry)}
+                      disabled={!canDownload}
+                      className="w-full gap-1.5 text-xs"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      {availableCaptions.actions.download}
+                    </Button>
+                  )}
 
-                {errorByKey[entry.key] && (
-                  <p className="mt-2 text-xs leading-snug text-destructive">
-                    {errorByKey[entry.key]}
-                  </p>
-                )}
-              </div>
-            )
-          })
-        )}
+                  {errorByKey[entry.key] && (
+                    <p className="mt-2 text-xs leading-snug text-destructive">
+                      {errorByKey[entry.key]}
+                    </p>
+                  )}
+                </div>
+              )
+            })
+          )}
+        </div>
       </div>
     </div>
   )
