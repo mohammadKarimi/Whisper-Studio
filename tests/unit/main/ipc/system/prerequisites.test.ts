@@ -1,0 +1,78 @@
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('electron')
+
+import {
+  resolveFallbackInstallerUrl,
+  resolveSystemInstallCandidates
+} from '../../../../../src/main/ipc/system/prerequisites'
+import { PYTHON_TARGET_VERSION } from '@shared/constants'
+
+describe('resolveSystemInstallCandidates()', () => {
+  it('uses winget for ffmpeg on Windows', () => {
+    const [candidate] = resolveSystemInstallCandidates('win32', 'ffmpeg')
+
+    expect(candidate.command).toBe('winget')
+    expect(candidate.args).toContain('Gyan.FFmpeg')
+  })
+
+  it('uses winget for python on Windows', () => {
+    const [candidate] = resolveSystemInstallCandidates('win32', 'python')
+
+    expect(candidate.command).toBe('winget')
+    expect(candidate.args).toContain(`Python.Python.${PYTHON_TARGET_VERSION}`)
+  })
+
+  it('uses Homebrew for ffmpeg on macOS', () => {
+    const [candidate] = resolveSystemInstallCandidates('darwin', 'ffmpeg')
+
+    expect(candidate.command).toBe('brew')
+    expect(candidate.args).toEqual(['install', 'ffmpeg'])
+  })
+
+  it('uses Homebrew for python on macOS', () => {
+    const [candidate] = resolveSystemInstallCandidates('darwin', 'python')
+
+    expect(candidate.command).toBe('brew')
+    expect(candidate.args).toEqual(['install', `python@${PYTHON_TARGET_VERSION}`])
+  })
+
+  it('offers apt-get then dnf for ffmpeg on Linux', () => {
+    const candidates = resolveSystemInstallCandidates('linux', 'ffmpeg')
+
+    expect(candidates.map((candidate) => candidate.probe)).toEqual(['apt-get', 'dnf'])
+    expect(candidates[0].command).toBe('sudo')
+    expect(candidates[0].args).toEqual(['apt-get', 'install', '-y', 'ffmpeg'])
+  })
+
+  it('pins the target Python version on Linux', () => {
+    const [apt] = resolveSystemInstallCandidates('linux', 'python')
+
+    expect(apt.command).toBe('sudo')
+    expect(apt.args).toContain(`python${PYTHON_TARGET_VERSION}`)
+  })
+
+  it('returns no candidates for unsupported platforms', () => {
+    expect(resolveSystemInstallCandidates('freebsd', 'ffmpeg')).toEqual([])
+  })
+
+  it('returns no candidates for pip-managed prerequisites', () => {
+    expect(resolveSystemInstallCandidates('win32', 'openai-whisper')).toEqual([])
+    expect(resolveSystemInstallCandidates('linux', 'torch')).toEqual([])
+  })
+})
+
+describe('resolveFallbackInstallerUrl()', () => {
+  it('returns the platform-specific ffmpeg page', () => {
+    expect(resolveFallbackInstallerUrl('darwin', 'ffmpeg')).toContain('ffmpeg.org')
+    expect(resolveFallbackInstallerUrl('win32', 'ffmpeg')).toContain('gyan.dev')
+  })
+
+  it('falls back to the generic url for unsupported platforms', () => {
+    expect(resolveFallbackInstallerUrl('freebsd', 'cuda')).toContain('nvidia.com')
+  })
+
+  it('returns null when no url is known', () => {
+    expect(resolveFallbackInstallerUrl('freebsd', 'torch')).toBeNull()
+  })
+})
