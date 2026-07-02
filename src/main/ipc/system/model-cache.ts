@@ -28,6 +28,34 @@ function isKnownDownloadableModel(modelId: string): boolean {
   return WHISPER_DOWNLOADABLE_IDS.includes(modelId)
 }
 
+// Detects TLS trust failures so the download can self-heal (install truststore + retry).
+function isCertificateError(stderr: string): boolean {
+  return /CERTIFICATE_VERIFY_FAILED|SSLCertVerificationError|self-signed certificate|unable to get local issuer/i.test(
+    stderr
+  )
+}
+
+// Python snippet that downloads a Whisper model. Before importing whisper it opportunistically
+// routes TLS validation through the OS trust store (truststore) and falls back to certifi, so
+// downloads work on stock python.org builds and behind corporate TLS-inspecting proxies.
+function buildDownloadScript(modelId: string, cacheDir: string): string {
+  return [
+    'import json',
+    'try:',
+    '    import truststore',
+    '    truststore.inject_into_ssl()',
+    'except Exception:',
+    '    try:',
+    '        import os, certifi',
+    '        os.environ.setdefault("SSL_CERT_FILE", certifi.where())',
+    '    except Exception:',
+    '        pass',
+    'import whisper',
+    `whisper.load_model(${JSON.stringify(modelId)}, download_root=${JSON.stringify(cacheDir)})`,
+    'print(json.dumps({"ok": True}))'
+  ].join('\n')
+}
+
 function resolveExitCode(error: unknown): number {
   if (typeof error === 'object' && error && 'code' in error && typeof error.code === 'number') {
     return error.code
@@ -171,12 +199,19 @@ export async function downloadModel(
     void emitCurrentProgress()
   }, 750)
 
-  const code = [
-    'import whisper, json',
-    `whisper.load_model(${JSON.stringify(modelId)}, download_root=${JSON.stringify(cacheDir)})`,
-    'print(json.dumps({"ok": True}))'
-  ].join('; ')
-  const result = await runCommand(python.command, [...python.prefixArgs, '-c', code])
+  const code = buildDownloadScript(modelId, cacheDir)
+  let result = await runCommand(python.command, [...python.prefixArgs, '-c', code])
+
+  // Self-heal TLS certificate failures (common with python.org builds on macOS and on
+  // managed/corporate networks): install `truststore` so Python uses the OS trust store,
+  // then retry the download once.
+  if (result.exitCode !== 0 && isCertificateError(result.stderr)) {
+    await runCommand(python.command, [
+      ...python.prefixArgs,
+      '-m', 'pip', 'install', '--quiet', 'truststore', 'certifi'
+    ])
+    result = await runCommand(python.command, [...python.prefixArgs, '-c', code])
+  }
 
   clearInterval(progressInterval)
   downloadedModelsCache.invalidate()
@@ -185,7 +220,10 @@ export async function downloadModel(
   return {
     id: modelId,
     ok: result.exitCode === 0,
-    stderr: result.stderr,
+    stderr:
+      result.exitCode === 0 || !isCertificateError(result.stderr)
+        ? result.stderr
+        : `${result.stderr}\n\nTLS certificate verification failed. If you are on a managed or corporate network, make sure Python trusts your system certificates. The app tried to fix this by installing "truststore"; on macOS you can also run the "Install Certificates.command" bundled with your Python installation.`,
     stdout: result.stdout
   }
 }

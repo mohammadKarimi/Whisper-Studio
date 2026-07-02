@@ -5,6 +5,7 @@ import type {
   PrerequisiteCheckId,
   PrerequisiteInstallResult
 } from '../../../shared/ipc'
+import { PYTHON_TARGET_VERSION } from '../../../shared/constants'
 import { createScopedCache } from './cache'
 
 type CommandResult = {
@@ -87,7 +88,7 @@ const systemInstallers: Record<
           'install',
           '-e',
           '--id',
-          'Python.Python.3.12',
+          `Python.Python.${PYTHON_TARGET_VERSION}`,
           '--accept-source-agreements',
           '--accept-package-agreements'
         ],
@@ -111,7 +112,9 @@ const systemInstallers: Record<
     ]
   },
   darwin: {
-    python: [{ probe: 'brew', command: 'brew', args: ['install', 'python'], label: 'Homebrew' }],
+    python: [
+      { probe: 'brew', command: 'brew', args: ['install', `python@${PYTHON_TARGET_VERSION}`], label: 'Homebrew' }
+    ],
     ffmpeg: [{ probe: 'brew', command: 'brew', args: ['install', 'ffmpeg'], label: 'Homebrew' }]
   },
   linux: {
@@ -119,13 +122,18 @@ const systemInstallers: Record<
       {
         probe: 'apt-get',
         command: 'sudo',
-        args: ['apt-get', 'install', '-y', 'python3', 'python3-pip'],
+        args: [
+          'apt-get', 'install', '-y',
+          `python${PYTHON_TARGET_VERSION}`,
+          `python${PYTHON_TARGET_VERSION}-venv`,
+          'python3-pip'
+        ],
         label: 'apt-get'
       },
       {
         probe: 'dnf',
         command: 'sudo',
-        args: ['dnf', 'install', '-y', 'python3', 'python3-pip'],
+        args: ['dnf', 'install', '-y', `python${PYTHON_TARGET_VERSION}`, `python${PYTHON_TARGET_VERSION}-pip`],
         label: 'dnf'
       }
     ],
@@ -292,8 +300,12 @@ function checkVersion(
 }
 
 // Shared Python discovery for system checks and model management.
+// Prefers the pinned target version (e.g. python3.12 / py -3.12) so that an installed
+// supported interpreter is used even when a newer, unsupported Python is also on PATH.
 export async function findPython(): Promise<CommandResult | null> {
   const candidates = [
+    { command: `python${PYTHON_TARGET_VERSION}`, args: ['--version'], timeoutMs: 1500 },
+    { command: 'py', prefixArgs: [`-${PYTHON_TARGET_VERSION}`], args: ['--version'], timeoutMs: 1500 },
     { command: 'python', args: ['--version'], timeoutMs: 2500 },
     { command: 'python3', args: ['--version'], timeoutMs: 1200 },
     { command: 'py', prefixArgs: ['-3'], args: ['--version'], timeoutMs: 1200 }

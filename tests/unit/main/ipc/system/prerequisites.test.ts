@@ -3,6 +3,7 @@ import {
   resolveFallbackInstallerUrl,
   resolveSystemInstallCandidates
 } from '@main/ipc/system/prerequisites'
+import { PYTHON_TARGET_VERSION } from '@shared/constants'
 
 describe('resolveSystemInstallCandidates()', () => {
   it('uses winget for ffmpeg on Windows', () => {
@@ -16,7 +17,7 @@ describe('resolveSystemInstallCandidates()', () => {
     const [candidate] = resolveSystemInstallCandidates('win32', 'python')
 
     expect(candidate.command).toBe('winget')
-    expect(candidate.args).toContain('Python.Python.3.12')
+    expect(candidate.args).toContain(`Python.Python.${PYTHON_TARGET_VERSION}`)
   })
 
   it('uses Homebrew for ffmpeg on macOS', () => {
@@ -30,7 +31,7 @@ describe('resolveSystemInstallCandidates()', () => {
     const [candidate] = resolveSystemInstallCandidates('darwin', 'python')
 
     expect(candidate.command).toBe('brew')
-    expect(candidate.args).toEqual(['install', 'python'])
+    expect(candidate.args).toEqual(['install', `python@${PYTHON_TARGET_VERSION}`])
   })
 
   it('offers apt-get then dnf for ffmpeg on Linux', () => {
@@ -39,6 +40,13 @@ describe('resolveSystemInstallCandidates()', () => {
     expect(candidates.map((candidate) => candidate.probe)).toEqual(['apt-get', 'dnf'])
     expect(candidates[0].command).toBe('sudo')
     expect(candidates[0].args).toEqual(['apt-get', 'install', '-y', 'ffmpeg'])
+  })
+
+  it('pins the target Python version on Linux', () => {
+    const [apt] = resolveSystemInstallCandidates('linux', 'python')
+
+    expect(apt.command).toBe('sudo')
+    expect(apt.args).toContain(`python${PYTHON_TARGET_VERSION}`)
   })
 
   it('returns no candidates for unsupported platforms', () => {

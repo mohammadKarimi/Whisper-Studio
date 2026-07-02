@@ -260,6 +260,16 @@ export const WHISPER_DOWNLOADABLE_IDS: readonly string[] = [
 ]
 
 /**
+ * Target Python version used consistently across all platforms.
+ *
+ * Pinned to a release with full prebuilt wheel coverage for `torch` and
+ * `openai-whisper`. Newer Python versions often lack these wheels, causing
+ * source builds or install failures. Used by both interpreter discovery
+ * (preferred over bare `python`/`python3`) and the platform installers.
+ */
+export const PYTHON_TARGET_VERSION = '3.12' as const
+
+/**
  * Maps lowercase language display names to their ISO 639 codes.
  * Used by the Whisper CLI `--language` argument.
  */
