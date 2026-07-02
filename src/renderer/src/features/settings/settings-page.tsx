@@ -6,6 +6,7 @@ import {
   Github,
   Bug,
   Mail,
+  Send,
   CheckCircle2,
   ArrowUpCircle,
   Coffee,
@@ -28,6 +29,11 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import { AboutLinkCard } from './components/about-link-card'
+import { DeleteAllConfirmModal } from './components/delete-all-confirm-modal'
+import { SegmentedControl } from './components/segmented-control'
+import { SettingsCard } from './components/settings-card'
+import { SettingRow } from './components/setting-row'
 import { useSettings } from './use-settings'
 
 const EXPORT_FORMATS = ['srt', 'vtt', 'txt', 'tsv'] as const
@@ -43,7 +49,7 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
     'idle' | 'checking' | { result: UpdateCheckResult } | 'error'
   >('idle')
   const [deletingAll, setDeletingAll] = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
 
   useEffect(() => {
     void desktop.getAppInfo().then(setAppInfo)
@@ -67,17 +73,13 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
   }
 
   async function handleDeleteAll(): Promise<void> {
-    if (!deleteConfirm) {
-      setDeleteConfirm(true)
-      return
-    }
     setDeletingAll(true)
     try {
       const records = await desktop.listTranscriptions()
       await Promise.all(records.map((r) => desktop.deleteTranscription(r.id)))
     } finally {
       setDeletingAll(false)
-      setDeleteConfirm(false)
+      setDeleteModalOpen(false)
     }
   }
 
@@ -174,8 +176,10 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
           </div>
         </div>
 
-        {/* ── Transcription Defaults ───────────────────────────────────── */}
-        <Card icon={<Sliders className="h-4 w-4 text-primary" />} title="Transcription Defaults">
+        <SettingsCard
+          icon={<Sliders className="h-4 w-4 text-primary" />}
+          title="Transcription Defaults"
+        >
           <SettingRow label="Default Language" description="Language used when none is selected.">
             <Select
               value={settings.defaultLanguage}
@@ -194,7 +198,11 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
             </Select>
           </SettingRow>
 
-          <SettingRow label="Default Task" description="Transcribe audio or translate to English.">
+          <SettingRow
+            label="Default Task"
+            description="Transcribe audio or translate to English."
+            badge="Soon"
+          >
             <SegmentedControl
               value={settings.defaultTask}
               options={[
@@ -224,10 +232,9 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
               }
             />
           </SettingRow>
-        </Card>
+        </SettingsCard>
 
-        {/* ── Output ──────────────────────────────────────────────────── */}
-        <Card icon={<FolderOutput className="h-4 w-4 text-primary" />} title="Output">
+        <SettingsCard icon={<FolderOutput className="h-4 w-4 text-primary" />} title="Output">
           <SettingRow
             label="Output Directory"
             description="Where transcription files are saved by default."
@@ -262,47 +269,23 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
               ))}
             </div>
           </SettingRow>
-        </Card>
+        </SettingsCard>
 
-        {/* ── Storage ─────────────────────────────────────────────────── */}
-        <Card icon={<Database className="h-4 w-4 text-primary" />} title="Storage">
+        <SettingsCard icon={<Database className="h-4 w-4 text-primary" />} title="Storage">
           <SettingRow
             label="Delete All Transcriptions"
             description="Permanently removes all saved transcription records and output files from disk."
             last
           >
-            {deleteConfirm ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-destructive">This cannot be undone.</span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  disabled={deletingAll}
-                  onClick={() => void handleDeleteAll()}
-                >
-                  {deletingAll ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-3.5 w-3.5" />
-                  )}
-                  Confirm
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setDeleteConfirm(false)}>
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button variant="outline" size="sm" onClick={() => void handleDeleteAll()}>
-                <Trash2 className="h-3.5 w-3.5" />
-                Delete All
-              </Button>
-            )}
+            <Button variant="outline" size="sm" onClick={() => setDeleteModalOpen(true)}>
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete All
+            </Button>
           </SettingRow>
-        </Card>
+        </SettingsCard>
 
-        {/* ── About ───────────────────────────────────────────────────── */}
-        <Card icon={<Info className="h-4 w-4 text-primary" />} title="About">
-          <div className="grid grid-cols-2 gap-3 p-6 sm:grid-cols-4">
+        <SettingsCard icon={<Info className="h-4 w-4 text-primary" />} title="About">
+          <div className="grid grid-cols-2 gap-3 p-6 sm:grid-cols-5">
             <AboutLinkCard
               icon={<Github className="h-5 w-5" />}
               label="GitHub"
@@ -331,8 +314,14 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
               description="Send an email"
               onClick={() => void desktop.openExternal('mailto:mha.karimi@gmail.com')}
             />
+            <AboutLinkCard
+              icon={<Send className="h-5 w-5" />}
+              label="Telegram"
+              description="@mhaKarimi"
+              onClick={() => void desktop.openExternal('https://t.me/mhaKarimi')}
+            />
           </div>
-        </Card>
+        </SettingsCard>
 
         {/* ── Footer ──────────────────────────────────────────────────── */}
         <p className="flex items-center justify-center gap-1.5 pb-2 text-xs text-muted-foreground/50">
@@ -340,106 +329,12 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
           Studio team · © {new Date().getFullYear()}
         </p>
       </div>
+      <DeleteAllConfirmModal
+        open={deleteModalOpen}
+        deleting={deletingAll}
+        onCancel={() => setDeleteModalOpen(false)}
+        onConfirm={() => void handleDeleteAll()}
+      />
     </div>
-  )
-}
-
-// ── Layout helpers ─────────────────────────────────────────────────────────────
-
-interface CardProps {
-  icon: React.ReactNode
-  title: string
-  children: React.ReactNode
-}
-
-function Card({ icon, title, children }: CardProps): JSX.Element {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border/40 bg-card">
-      <div className="flex items-center gap-2.5 border-b border-border/40 px-6 py-4">
-        {icon}
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-interface SettingRowProps {
-  label: string
-  description?: string
-  last?: boolean
-  children: React.ReactNode
-}
-
-function SettingRow({ label, description, last = false, children }: SettingRowProps): JSX.Element {
-  return (
-    <div
-      className={`flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between ${
-        !last ? 'border-b border-border/40' : ''
-      }`}
-    >
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
-      </div>
-      <div className="shrink-0">{children}</div>
-    </div>
-  )
-}
-
-interface SegmentedOption {
-  label: string
-  value: string
-}
-
-interface SegmentedControlProps {
-  value: string
-  options: SegmentedOption[]
-  onChange: (value: string) => void
-}
-
-function SegmentedControl({ value, options, onChange }: SegmentedControlProps): JSX.Element {
-  return (
-    <div className="inline-flex rounded-lg border border-input bg-background p-0.5">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-            value === opt.value
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-interface AboutLinkCardProps {
-  icon: React.ReactNode
-  label: string
-  description: string
-  onClick: () => void
-}
-
-function AboutLinkCard({ icon, label, description, onClick }: AboutLinkCardProps): JSX.Element {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group flex flex-col items-center gap-2 rounded-xl border border-border/40 bg-muted/30 px-3 py-4 text-center transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-sm"
-    >
-      <span className="text-muted-foreground transition-colors group-hover:text-primary">
-        {icon}
-      </span>
-      <div>
-        <p className="text-xs font-medium text-foreground">{label}</p>
-        <p className="text-[10px] text-muted-foreground/70">{description}</p>
-      </div>
-    </button>
   )
 }

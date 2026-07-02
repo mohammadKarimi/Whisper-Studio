@@ -29,7 +29,7 @@ function Select({ children, value, onValueChange }: SelectProps): JSX.Element {
     <SelectContext.Provider
       value={{ open, selectedLabel, setOpen, setSelectedLabel, onValueChange, value }}
     >
-      <div className={cn('relative inline-block', open && 'z-[1000]')}>{children}</div>
+      <div className={cn('relative inline-block', open && 'z-[9999]')}>{children}</div>
     </SelectContext.Provider>
   )
 }
@@ -95,7 +95,7 @@ function SelectContent({
   return (
     <div
       className={cn(
-        'absolute right-0 z-[1000] mt-1 min-w-full overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg',
+        'absolute right-0 z-[9999] mt-1 max-h-72 min-w-full overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-lg',
         className
       )}
       {...props}
