@@ -113,7 +113,12 @@ const systemInstallers: Record<
   },
   darwin: {
     python: [
-      { probe: 'brew', command: 'brew', args: ['install', `python@${PYTHON_TARGET_VERSION}`], label: 'Homebrew' }
+      {
+        probe: 'brew',
+        command: 'brew',
+        args: ['install', `python@${PYTHON_TARGET_VERSION}`],
+        label: 'Homebrew'
+      }
     ],
     ffmpeg: [{ probe: 'brew', command: 'brew', args: ['install', 'ffmpeg'], label: 'Homebrew' }]
   },
@@ -123,7 +128,9 @@ const systemInstallers: Record<
         probe: 'apt-get',
         command: 'sudo',
         args: [
-          'apt-get', 'install', '-y',
+          'apt-get',
+          'install',
+          '-y',
           `python${PYTHON_TARGET_VERSION}`,
           `python${PYTHON_TARGET_VERSION}-venv`,
           'python3-pip'
@@ -133,7 +140,13 @@ const systemInstallers: Record<
       {
         probe: 'dnf',
         command: 'sudo',
-        args: ['dnf', 'install', '-y', `python${PYTHON_TARGET_VERSION}`, `python${PYTHON_TARGET_VERSION}-pip`],
+        args: [
+          'dnf',
+          'install',
+          '-y',
+          `python${PYTHON_TARGET_VERSION}`,
+          `python${PYTHON_TARGET_VERSION}-pip`
+        ],
         label: 'dnf'
       }
     ],
@@ -305,7 +318,12 @@ function checkVersion(
 export async function findPython(): Promise<CommandResult | null> {
   const candidates = [
     { command: `python${PYTHON_TARGET_VERSION}`, args: ['--version'], timeoutMs: 1500 },
-    { command: 'py', prefixArgs: [`-${PYTHON_TARGET_VERSION}`], args: ['--version'], timeoutMs: 1500 },
+    {
+      command: 'py',
+      prefixArgs: [`-${PYTHON_TARGET_VERSION}`],
+      args: ['--version'],
+      timeoutMs: 1500
+    },
     { command: 'python', args: ['--version'], timeoutMs: 2500 },
     { command: 'python3', args: ['--version'], timeoutMs: 1200 },
     { command: 'py', prefixArgs: ['-3'], args: ['--version'], timeoutMs: 1200 }

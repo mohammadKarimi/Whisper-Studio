@@ -208,7 +208,12 @@ export async function downloadModel(
   if (result.exitCode !== 0 && isCertificateError(result.stderr)) {
     await runCommand(python.command, [
       ...python.prefixArgs,
-      '-m', 'pip', 'install', '--quiet', 'truststore', 'certifi'
+      '-m',
+      'pip',
+      'install',
+      '--quiet',
+      'truststore',
+      'certifi'
     ])
     result = await runCommand(python.command, [...python.prefixArgs, '-c', code])
   }
