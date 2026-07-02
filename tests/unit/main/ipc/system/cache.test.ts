@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createScopedCache } from '@main/ipc/system/cache'
+import { createScopedCache } from '@main/cache'
 
 describe('createScopedCache()', () => {
   beforeEach(() => {

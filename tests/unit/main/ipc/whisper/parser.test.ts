@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest'
 import { join } from 'node:path'
 import * as fs from 'node:fs/promises'
 import * as fsSync from 'node:fs'
-import { parseWhisperJson } from '@main/ipc/whisper/parser'
+import { parseWhisperJson } from '@main/parser'
 
 vi.mock('node:fs/promises')
 vi.mock('node:fs')
@@ -32,7 +32,12 @@ describe('parseWhisperJson()', () => {
     if (!result.ok) return
 
     expect(result.value.segments).toHaveLength(2)
-    expect(result.value.segments[0]).toMatchObject({ id: 1, start: 0, end: 2.5, text: 'Hello world' })
+    expect(result.value.segments[0]).toMatchObject({
+      id: 1,
+      start: 0,
+      end: 2.5,
+      text: 'Hello world'
+    })
   })
 
   it('trims whitespace from segment text', async () => {
@@ -59,10 +64,7 @@ describe('parseWhisperJson()', () => {
 
     await parseWhisperJson('/some/output', 'recording.wav')
 
-    expect(mockReadFile).toHaveBeenCalledWith(
-      join('/some/output', 'recording.json'),
-      'utf8'
-    )
+    expect(mockReadFile).toHaveBeenCalledWith(join('/some/output', 'recording.json'), 'utf8')
   })
 
   it('strips the source file extension when building the json path', async () => {
@@ -70,10 +72,7 @@ describe('parseWhisperJson()', () => {
 
     await parseWhisperJson('/out', 'my.audio.file.mp4')
 
-    expect(mockReadFile).toHaveBeenCalledWith(
-      join('/out', 'my.audio.file.json'),
-      'utf8'
-    )
+    expect(mockReadFile).toHaveBeenCalledWith(join('/out', 'my.audio.file.json'), 'utf8')
   })
 
   it('populates jsonFile with path and size', async () => {
@@ -119,7 +118,9 @@ describe('parseWhisperJson()', () => {
 
   it('getFileSize returns 0 when statSync throws', async () => {
     mockReadFile.mockResolvedValue(VALID_JSON)
-    mockStatSync.mockImplementation(() => { throw new Error('no such file') })
+    mockStatSync.mockImplementation(() => {
+      throw new Error('no such file')
+    })
 
     const result = await parseWhisperJson('/out', 'audio.mp3')
     if (!result.ok) throw new Error('expected ok')

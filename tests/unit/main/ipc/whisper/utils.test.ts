@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeLanguage, sanitizeFileName, getTimestamp } from '@main/ipc/whisper/utils'
+import { normalizeLanguage, sanitizeFileName, getTimestamp } from '@main/ipc/utils'
 
 describe('normalizeLanguage()', () => {
   it('returns null for empty string', () => {
