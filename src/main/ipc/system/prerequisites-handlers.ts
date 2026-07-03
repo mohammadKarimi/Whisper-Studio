@@ -1,8 +1,9 @@
 import { ipcMain, shell } from 'electron'
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import type {
   PrerequisiteCheck,
   PrerequisiteCheckId,
+  PrerequisiteInstallProgress,
   PrerequisiteInstallResult
 } from '../../../shared/ipc'
 import { IPC_CHANNELS } from '../../../shared/ipc'
@@ -229,12 +230,18 @@ export function registerPrerequisiteHandlers(): void {
 
   ipcMain.handle(
     IPC_CHANNELS.prerequisiteInstall,
-    async (_event, id: PrerequisiteCheckId): Promise<PrerequisiteInstallResult> => {
+    async (event, id: PrerequisiteCheckId): Promise<PrerequisiteInstallResult> => {
       if (!prerequisiteIds.includes(id)) {
         return { action: 'opened', id, ok: false, stderr: 'Unknown prerequisite.' }
       }
 
-      return installPrerequisite(id)
+      const onLine = (line: string): void => {
+        const parsed = parsePipProgressLine(line)
+        const progress: PrerequisiteInstallProgress = { id, line, ...parsed }
+        event.sender.send(IPC_CHANNELS.prerequisiteInstallProgress, progress)
+      }
+
+      return installPrerequisite(id, onLine)
     }
   )
 }
@@ -276,6 +283,86 @@ function runDetailedCommand(
         })
       }
     )
+  })
+}
+
+// ANSI escape-code stripper (covers colour, cursor, and progress-bar sequences).
+// eslint-disable-next-line no-control-regex
+const ANSI_RE = /\u001b\[[\d;]*[A-Za-z]|\u001b\][^\u0007]*\u0007|\r/g
+
+function stripAnsi(text: string): string {
+  return text.replace(ANSI_RE, '')
+}
+
+// Streaming variant of runDetailedCommand: calls onLine for every non-empty
+// output line so the renderer can show live pip progress.
+function runStreamingCommand(
+  command: string,
+  args: readonly string[],
+  onLine: (line: string) => void,
+  timeoutMs = 10 * 60 * 1000
+): Promise<DetailedCommandResult> {
+  return new Promise((resolve) => {
+    const child = spawn(command, [...args], {
+      timeout: timeoutMs,
+      windowsHide: true,
+      shell: false
+    })
+
+    const stdoutChunks: string[] = []
+    const stderrChunks: string[] = []
+    let stdoutBuf = ''
+    let stderrBuf = ''
+
+    const flushLines = (buf: string, store: string[]): string => {
+      const parts = buf.split(/[\r\n]/)
+      for (let i = 0; i < parts.length - 1; i++) {
+        const line = stripAnsi(parts[i]).trim()
+        if (line) {
+          store.push(line)
+          onLine(line)
+        }
+      }
+      return parts[parts.length - 1] ?? ''
+    }
+
+    child.stdout.on('data', (chunk: Buffer) => {
+      stdoutBuf += chunk.toString('utf8')
+      stdoutBuf = flushLines(stdoutBuf, stdoutChunks)
+    })
+
+    child.stderr.on('data', (chunk: Buffer) => {
+      stderrBuf += chunk.toString('utf8')
+      stderrBuf = flushLines(stderrBuf, stderrChunks)
+    })
+
+    child.on('close', (code) => {
+      // Flush any remaining partial line.
+      const remainingOut = stripAnsi(stdoutBuf).trim()
+      if (remainingOut) {
+        stdoutChunks.push(remainingOut)
+        onLine(remainingOut)
+      }
+      const remainingErr = stripAnsi(stderrBuf).trim()
+      if (remainingErr) {
+        stderrChunks.push(remainingErr)
+        onLine(remainingErr)
+      }
+
+      resolve({
+        exitCode: code,
+        stdout: stdoutChunks.join('\n'),
+        stderr: stderrChunks.join('\n')
+      })
+    })
+
+    child.on('error', (err) => {
+      resolve({
+        exitCode: 1,
+        stdout: stdoutChunks.join('\n'),
+        stderr: err.message
+      })
+    })
   })
 }
 
@@ -501,6 +588,51 @@ async function checkCudaWithTorch(
   }
 }
 
+// Parses a pip progress line such as:
+//   "874.5/2.6 GB 1.2 MB/s eta 0:25:42"
+// and returns byte values the UI can use to render a determinate progress bar.
+function parsePipProgressLine(
+  line: string
+): Pick<
+  PrerequisiteInstallProgress,
+  'downloadedBytes' | 'totalBytes' | 'speedBytesPerSec' | 'etaSeconds'
+> | null {
+  const match = line.match(
+    /([\d.]+)\s*\/\s*([\d.]+)\s*(TB|GB|MB|kB|B)\s+([\d.]+)\s*(TB|GB|MB|kB|B)\/s\s+eta\s+([\d:]+)/i
+  )
+  if (!match) return null
+
+  const toBytes = (value: number, unit: string): number => {
+    switch (unit.toLowerCase()) {
+      case 'tb':
+        return value * 1024 ** 4
+      case 'gb':
+        return value * 1024 ** 3
+      case 'mb':
+        return value * 1024 ** 2
+      case 'kb':
+        return value * 1024
+      default:
+        return value
+    }
+  }
+
+  const etaParts = (match[6] ?? '0').split(':').map(Number)
+  const etaSeconds =
+    etaParts.length === 3
+      ? (etaParts[0] ?? 0) * 3600 + (etaParts[1] ?? 0) * 60 + (etaParts[2] ?? 0)
+      : etaParts.length === 2
+        ? (etaParts[0] ?? 0) * 60 + (etaParts[1] ?? 0)
+        : (etaParts[0] ?? 0)
+
+  return {
+    downloadedBytes: toBytes(parseFloat(match[1] ?? '0'), match[3] ?? 'B'),
+    totalBytes: toBytes(parseFloat(match[2] ?? '0'), match[3] ?? 'B'),
+    speedBytesPerSec: toBytes(parseFloat(match[4] ?? '0'), match[5] ?? 'B'),
+    etaSeconds
+  }
+}
+
 // Runs all prerequisite checks in parallel and merges results in display order.
 async function checkPrerequisites(): Promise<PrerequisiteCheck[]> {
   const { check: pythonCheck, python } = await checkPython()
@@ -532,7 +664,8 @@ async function checkPrerequisites(): Promise<PrerequisiteCheck[]> {
 
 async function installViaPip(
   id: PrerequisiteCheckId,
-  pipPackage: string
+  pipPackage: string,
+  onLine?: (line: string) => void
 ): Promise<PrerequisiteInstallResult> {
   const python = await findPython()
 
@@ -570,7 +703,9 @@ async function installViaPip(
     '--no-cache-dir',
     pipPackage
   ]
-  const result = await runDetailedCommand(python.command, args)
+  const result = onLine
+    ? await runStreamingCommand(python.command, args, onLine)
+    : await runDetailedCommand(python.command, args)
   clearPrerequisiteCache()
 
   return {
@@ -597,10 +732,38 @@ function getFallbackInstallerUrl(id: PrerequisiteCheckId): string | null {
   return resolveFallbackInstallerUrl(platform ?? process.platform, id)
 }
 
+// After a system-level install on Windows, winget/the Python installer writes the
+// new binary paths into the HKCU\Environment registry key but the running Electron
+// process still has the old PATH snapshot from startup. Re-reading PATH from the
+// registry and updating process.env.PATH lets subsequent findPython() calls see
+// the freshly installed binary without needing an app restart.
+async function refreshWindowsPath(): Promise<void> {
+  if (process.platform !== 'win32') return
+
+  try {
+    const output = await runCommand(
+      'powershell',
+      [
+        '-NonInteractive',
+        '-NoProfile',
+        '-Command',
+        '([Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [Environment]::GetEnvironmentVariable("PATH","User")).TrimEnd(";")'
+      ],
+      4000
+    )
+    if (output) {
+      process.env.PATH = output.trim()
+    }
+  } catch {
+    // Non-critical: if this fails PATH stays as-is and the user may need to restart.
+  }
+}
+
 // Installs a system-level prerequisite using the platform's package manager.
 // Falls back to opening a download page when no supported manager is available.
 async function installSystemPrerequisite(
-  id: PrerequisiteCheckId
+  id: PrerequisiteCheckId,
+  onLine?: (line: string) => void
 ): Promise<PrerequisiteInstallResult> {
   // Step 1 – resolve platform install candidates and the fallback URL
   const platform = getInstallPlatform()
@@ -616,9 +779,15 @@ async function installSystemPrerequisite(
     }
 
     // Step 3 – run the install command and build the result
-    const result = await runDetailedCommand(candidate.command, candidate.args)
+    const result = onLine
+      ? await runStreamingCommand(candidate.command, [...candidate.args], onLine)
+      : await runDetailedCommand(candidate.command, candidate.args)
     const command = `${candidate.command} ${candidate.args.join(' ')}`
     clearPrerequisiteCache()
+
+    if (result.exitCode === 0) {
+      await refreshWindowsPath()
+    }
 
     return {
       action: 'installed',
@@ -646,7 +815,7 @@ async function installSystemPrerequisite(
   }
 }
 
-async function installCuda(): Promise<PrerequisiteInstallResult> {
+async function installCuda(onLine?: (line: string) => void): Promise<PrerequisiteInstallResult> {
   const id: PrerequisiteCheckId = 'cuda'
 
   // Step 1 – guard: CUDA is not supported on macOS
@@ -687,7 +856,9 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
     '--index-url',
     CUDA_TORCH_INDEX_URL
   ]
-  const result = await runDetailedCommand(python.command, args)
+  const result = onLine
+    ? await runStreamingCommand(python.command, args, onLine)
+    : await runDetailedCommand(python.command, args)
 
   if (result.exitCode !== 0) {
     return {
@@ -718,19 +889,20 @@ async function installCuda(): Promise<PrerequisiteInstallResult> {
   }
 }
 
-type Installer = () => Promise<PrerequisiteInstallResult>
+type Installer = (onLine?: (line: string) => void) => Promise<PrerequisiteInstallResult>
 
 const INSTALLERS: Record<PrerequisiteCheckId, Installer> = {
-  python: () => installSystemPrerequisite('python'),
-  ffmpeg: () => installSystemPrerequisite('ffmpeg'),
-  cuda: () => installCuda(),
-  'openai-whisper': () =>
-    installViaPip('openai-whisper', pipInstallPackages['openai-whisper'] as string),
-  torch: () => installViaPip('torch', pipInstallPackages.torch as string)
+  python: (onLine) => installSystemPrerequisite('python', onLine),
+  ffmpeg: (onLine) => installSystemPrerequisite('ffmpeg', onLine),
+  cuda: (onLine) => installCuda(onLine),
+  'openai-whisper': (onLine) =>
+    installViaPip('openai-whisper', pipInstallPackages['openai-whisper'] as string, onLine),
+  torch: (onLine) => installViaPip('torch', pipInstallPackages.torch as string, onLine)
 }
 
 export async function installPrerequisite(
-  id: PrerequisiteCheckId
+  id: PrerequisiteCheckId,
+  onLine?: (line: string) => void
 ): Promise<PrerequisiteInstallResult> {
-  return INSTALLERS[id]()
+  return INSTALLERS[id](onLine)
 }

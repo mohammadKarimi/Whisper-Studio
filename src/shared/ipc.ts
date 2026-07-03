@@ -4,6 +4,7 @@ export const IPC_CHANNELS = {
   systemStatus: 'system:status',
   prerequisites: 'system:prerequisites',
   prerequisiteInstall: 'system:prerequisite-install',
+  prerequisiteInstallProgress: 'system:prerequisite-install-progress',
   downloadedModels: 'models:downloaded',
   downloadModel: 'models:download',
   modelDownloadProgress: 'models:download-progress',
@@ -72,6 +73,15 @@ export interface PrerequisiteInstallResult {
   ok: boolean
   stderr?: string
   stdout?: string
+}
+
+export interface PrerequisiteInstallProgress {
+  id: PrerequisiteCheckId
+  line: string
+  downloadedBytes?: number
+  totalBytes?: number
+  speedBytesPerSec?: number
+  etaSeconds?: number
 }
 
 export interface DownloadedWhisperModel {
@@ -201,6 +211,9 @@ export interface AppApi {
   getSystemStatus: () => Promise<SystemStatus>
   getPrerequisites: () => Promise<PrerequisiteCheck[]>
   installPrerequisite: (id: PrerequisiteCheckId) => Promise<PrerequisiteInstallResult>
+  onPrerequisiteInstallProgress: (
+    callback: (progress: PrerequisiteInstallProgress) => void
+  ) => () => void
   getFilePath: (file: unknown) => string
 }
 

@@ -12,6 +12,7 @@ import {
   type ModelApi,
   type PrerequisiteCheck,
   type PrerequisiteCheckId,
+  type PrerequisiteInstallProgress,
   type PrerequisiteInstallResult,
   type SettingsApi,
   type SystemStatus,
@@ -35,6 +36,16 @@ const appApi: AppApi = {
     ipcRenderer.invoke(IPC_CHANNELS.prerequisites) as Promise<PrerequisiteCheck[]>,
   installPrerequisite: (id: PrerequisiteCheckId) =>
     ipcRenderer.invoke(IPC_CHANNELS.prerequisiteInstall, id) as Promise<PrerequisiteInstallResult>,
+  onPrerequisiteInstallProgress: (callback) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      progress: PrerequisiteInstallProgress
+    ): void => {
+      callback(progress)
+    }
+    ipcRenderer.on(IPC_CHANNELS.prerequisiteInstallProgress, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.prerequisiteInstallProgress, listener)
+  },
   getFilePath: (file: unknown) =>
     webUtils.getPathForFile(file as Parameters<typeof webUtils.getPathForFile>[0])
 }
