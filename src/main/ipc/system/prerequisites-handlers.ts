@@ -287,7 +287,8 @@ function runDetailedCommand(
 }
 
 // ANSI escape-code stripper (covers colour, cursor, and progress-bar sequences).
-const ANSI_RE = /\x1b\[[\d;]*[A-Za-z]|\x1b\][^\x07]*\x07|\r/g
+// eslint-disable-next-line no-control-regex
+const ANSI_RE = /\u001b\[[\d;]*[A-Za-z]|\u001b\][^\u0007]*\u0007|\r/g
 
 function stripAnsi(text: string): string {
   return text.replace(ANSI_RE, '')
