@@ -14,6 +14,13 @@ protocol.registerSchemesAsPrivileged([
 let mainWindow: BrowserWindow | null = null
 
 const isDevelopment = process.env.NODE_ENV === 'development'
+
+function getWindowIcon(): string {
+  const base = app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources')
+  if (process.platform === 'win32') return join(base, 'icon.ico')
+  if (process.platform === 'darwin') return join(base, 'icon.icns')
+  return join(base, 'icons', '256x256.png')
+}
 const shouldOpenDevTools = process.env.ELECTRON_OPEN_DEVTOOLS === 'true'
 
 function getMimeType(filePath: string): string {
@@ -60,6 +67,7 @@ function createMainWindow(): BrowserWindow {
     minWidth: 960,
     minHeight: 640,
     title: 'Whisper Studio',
+    icon: getWindowIcon(),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
     trafficLightPosition: { x: 16, y: 14 },
     backgroundColor: '#18191f',

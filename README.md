@@ -2,7 +2,7 @@
 
 <p align="center">
   
-<img width="120" height="120" alt="Whisper Studio" src="https://github.com/user-attachments/assets/8c76ac8a-29a2-4781-9932-76286cfa4894" />
+<img width="120" height="120" alt="Whisper Studio" src="/src/renderer/src/logo.svg" />
 
 </p>
 

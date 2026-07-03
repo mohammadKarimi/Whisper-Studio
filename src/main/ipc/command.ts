@@ -3,6 +3,7 @@
 
 import { PYTHON_TARGET_VERSION } from '../../shared/constants'
 import { execFile } from 'node:child_process'
+import { parseVersion } from './utils'
 
 export type CommandResult = {
   command: string
@@ -84,11 +85,4 @@ export function runCommand(
       }
     )
   })
-}
-
-export function parseVersion(output: string): string | null {
-  // Match dotted versions (3.11.0) or date versions (20231117)
-  return (
-    output.match(/\d+(?:\.\d+)+(?:[A-Za-z0-9.+-]*)?/)?.[0] ?? output.match(/\b\d{8}\b/)?.[0] ?? null
-  )
 }

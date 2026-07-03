@@ -13,10 +13,10 @@ import {
   CommandCandidate,
   CommandResult,
   findPython,
-  parseVersion,
   runCommand,
   runCommandCandidate
 } from '../command'
+import { compareVersions, parseVersion, stripAnsi } from '../utils'
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -295,14 +295,6 @@ function runDetailedCommand(
   })
 }
 
-// ANSI escape-code stripper (covers colour, cursor, and progress-bar sequences).
-// eslint-disable-next-line no-control-regex
-const ANSI_RE = /\u001b\[[\d;]*[A-Za-z]|\u001b\][^\u0007]*\u0007|\r/g
-
-function stripAnsi(text: string): string {
-  return text.replace(ANSI_RE, '')
-}
-
 // Streaming variant of runDetailedCommand: calls onLine for every non-empty
 // output line so the renderer can show live pip progress.
 function runStreamingCommand(
@@ -373,28 +365,6 @@ function runStreamingCommand(
       })
     })
   })
-}
-
-function compareVersions(actual: string, required: readonly number[]): number {
-  const actualParts = actual
-    .split(/[^\d]+/)
-    .filter(Boolean)
-    .map(Number)
-
-  for (let index = 0; index < required.length; index += 1) {
-    const actualPart = actualParts[index] ?? 0
-    const requiredPart = required[index] ?? 0
-
-    if (actualPart > requiredPart) {
-      return 1
-    }
-
-    if (actualPart < requiredPart) {
-      return -1
-    }
-  }
-
-  return 0
 }
 
 function checkVersion(

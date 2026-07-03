@@ -43,11 +43,7 @@ export function TitleBar({
       )}
     >
       <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground">
-        <span
-          className="size-4 shrink-0 bg-current"
-          style={{ maskImage: `url(${logoUrl})`, maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: `url(${logoUrl})`, WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}
-          aria-hidden="true"
-        />
+        <img src={logoUrl} className="size-4 shrink-0" alt="" aria-hidden="true" />
         <span className="truncate">{appName}</span>
       </div>
 
