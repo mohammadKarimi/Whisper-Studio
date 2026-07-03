@@ -1,6 +1,6 @@
 {
   "name": "whisper-studio",
-  "version": "0.1.5",
+  "version": "0.1.9",
   "description": "Open-source Electron, React, and TypeScript desktop boilerplate for Whisper Studio.",
   "author": {
     "name": "Whisper Studio Contributors",
