@@ -5,8 +5,8 @@ import { useDesktopShell } from './app/use-desktop-shell'
 import { AppSidebar } from './components/app-sidebar'
 import { SystemStatusBar } from './components/system-status-bar'
 import { TitleBar } from './components/title-bar'
-import { StudioProvider } from './lib/studio-context'
 import { captions } from './lib/strings'
+import { StudioProvider } from './lib/studio-context'
 
 // ---------------------------------------------------------------------------
 // Error boundary — catches render-time and lifecycle errors in route views.
