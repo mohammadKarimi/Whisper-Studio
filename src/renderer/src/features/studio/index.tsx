@@ -6,13 +6,13 @@ import { Search, Replace, Download, Check, FileAudio, Clock, Loader2, Save, X } 
 import AudioPlayer from '@/features/studio/components/audio-player'
 import SpeakerPanel from '@/features/studio/components/speaker-panel'
 import TranscriptSegment from '@/features/studio/components/transcript-segment'
-import type { FileSystemApi } from '@shared/ipc'
+import type { DesktopApi } from '@shared/ipc'
 import { useStudioContext } from '@/lib/studio-context'
 import { useAppRoute } from '@/app/use-app-route'
 import { useTranscriptEditor } from './hooks/use-transcript-editor'
 
 interface StudioProps {
-  desktop: FileSystemApi
+  desktop: DesktopApi
 }
 
 export default function Studio({ desktop }: StudioProps) {

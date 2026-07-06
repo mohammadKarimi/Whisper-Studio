@@ -261,8 +261,8 @@ export const captions = {
       replace: 'Replace',
       replaceAll: 'Replace All',
       comments: 'Comments',
-      followOn: 'Follow: On',
-      followOff: 'Follow: Off'
+      followOn: 'Auto Scroll: On',
+      followOff: 'Auto Scroll: Off'
     },
     placeholders: {
       search: 'Search transcript…',

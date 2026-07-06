@@ -7,7 +7,7 @@ import {
   type Dispatch,
   type SetStateAction
 } from 'react'
-import type { FileSystemApi, TranscriptionRecord } from '@shared/ipc'
+import type { DesktopApi, TranscriptionRecord } from '@shared/ipc'
 import type { SrtSegment } from '@/lib/srt-parser'
 import { secondsToDisplay } from '@/lib/utils'
 import { captions } from '@/lib/strings'
@@ -61,7 +61,7 @@ export interface UseTranscriptEditorResult {
 export function useTranscriptEditor(
   record: TranscriptionRecord | null,
   onSaved: (updated: TranscriptionRecord) => void,
-  desktop: FileSystemApi
+  desktop: DesktopApi
 ): UseTranscriptEditorResult {
   const [segments, setSegments] = useState<SrtSegment[]>([])
   const [loading, setLoading] = useState(true)

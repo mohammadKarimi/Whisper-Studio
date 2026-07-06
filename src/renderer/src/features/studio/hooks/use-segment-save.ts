@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import type { FileSystemApi, TranscriptionRecord } from '@shared/ipc'
+import type { DesktopApi, TranscriptionRecord } from '@shared/ipc'
 import type { SrtSegment } from '@/lib/srt-parser'
 
 type SaveStatus = 'idle' | 'saved' | 'error'
@@ -15,7 +15,7 @@ interface UseSegmentSaveResult {
 export function useSegmentSave(
   record: TranscriptionRecord | null,
   segments: SrtSegment[],
-  desktop: FileSystemApi,
+  desktop: DesktopApi,
   onSaved: (updated: TranscriptionRecord) => void
 ): UseSegmentSaveResult {
   const [isDirty, setIsDirty] = useState(false)
@@ -35,16 +35,16 @@ export function useSegmentSave(
 
   async function handleSave(): Promise<void> {
     if (!record) return
-    if (!record.outputDirectory) {
-      setSaveStatus('error')
-      return
-    }
     setIsSaving(true)
     try {
+      const settings = await desktop.getSettings()
       const sep = record.outputDirectory.includes('/') ? '/' : '\\'
-      const metaPath = `${record.outputDirectory}${sep}whisper-studio.json`
+      const baseDir = settings.defaultOutputDirectory ?? record.outputDirectory.substring(0, record.outputDirectory.lastIndexOf(sep))
+      const outputDirectory = `${baseDir}${sep}${record.id}`
+      const metaPath = `${outputDirectory}${sep}whisper-studio.json`
       const updatedRecord: TranscriptionRecord = {
         ...record,
+        outputDirectory,
         editedAt: Date.now(),
         segments: segmentsRef.current.map((s) => ({
           id: s.id,
