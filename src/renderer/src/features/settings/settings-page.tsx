@@ -306,7 +306,7 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
               icon={<Coffee className="h-5 w-5" />}
               label="Buy Me a Coffee"
               description="Support the team"
-              onClick={() => void desktop.openExternal('https://buymeacoffee.com')}
+              onClick={() => void desktop.openExternal('https://buymeacoffee.com/mohammadkarimi')}
             />
             <AboutLinkCard
               icon={<Mail className="h-5 w-5" />}
