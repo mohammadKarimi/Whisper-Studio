@@ -39,7 +39,9 @@ export function useSegmentSave(
     try {
       const settings = await desktop.getSettings()
       const sep = record.outputDirectory.includes('/') ? '/' : '\\'
-      const baseDir = settings.defaultOutputDirectory ?? record.outputDirectory.substring(0, record.outputDirectory.lastIndexOf(sep))
+      const baseDir =
+        settings.defaultOutputDirectory ??
+        record.outputDirectory.substring(0, record.outputDirectory.lastIndexOf(sep))
       const outputDirectory = `${baseDir}${sep}${record.id}`
       const metaPath = `${outputDirectory}${sep}whisper-studio.json`
       const updatedRecord: TranscriptionRecord = {
