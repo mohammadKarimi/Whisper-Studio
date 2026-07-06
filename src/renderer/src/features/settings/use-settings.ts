@@ -7,7 +7,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultTask: 'transcribe',
   defaultCompute: 'auto',
   defaultOutputDirectory: null,
-  defaultExportFormats: ['srt', 'txt']
+  defaultExportFormats: ['srt', 'txt', 'vtt', 'tsv']
 }
 
 export function useSettings(desktop: Pick<SettingsApi, 'getSettings' | 'setSettings'>) {

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { FileSystemApi } from '@shared/ipc'
+import { useState, useEffect } from 'react'
+import type { DesktopApi } from '@shared/ipc'
 import { useStudioContext } from '@/lib/studio-context'
 import {
   generate,
@@ -7,13 +7,15 @@ import {
   FORMAT_LABELS,
   FORMAT_DESCRIPTIONS
 } from '@/lib/export-generators'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Link } from '@/app/navigation'
 import { captions } from '@/lib/strings'
+import { cn } from '@/lib/utils'
 import { FileAudio, Download, Check, Copy, ArrowLeft, Loader2, FolderOpen } from 'lucide-react'
 
 interface ExportProps {
-  desktop: FileSystemApi
+  desktop: DesktopApi
 }
 
 const FORMATS: ExportFormat[] = ['srt', 'vtt', 'txt', 'tsv']
@@ -26,6 +28,18 @@ export default function Export({ desktop }: ExportProps) {
   const [saved, setSaved] = useState<Set<ExportFormat>>(new Set())
   const [saveDir, setSaveDir] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [enabledFormats, setEnabledFormats] = useState<ExportFormat[]>(FORMATS)
+
+  useEffect(() => {
+    void desktop.getSettings().then((s) => {
+      if (s.defaultOutputDirectory) setSaveDir(s.defaultOutputDirectory)
+      if (s.defaultExportFormats.length > 0) {
+        const filtered = FORMATS.filter((f) => s.defaultExportFormats.includes(f))
+        setEnabledFormats(filtered.length > 0 ? filtered : FORMATS)
+        setActiveFormat((prev) => (filtered.includes(prev) ? prev : (filtered[0] ?? prev)))
+      }
+    })
+  }, [desktop])
 
   const segments = record?.segments ?? []
   const preview = segments.length > 0 ? generate(activeFormat, segments) : ''
@@ -73,7 +87,7 @@ export default function Export({ desktop }: ExportProps) {
     try {
       const baseName = record.sourceFileName.replace(/\.[^.]+$/, '')
       const sep = dir.includes('/') ? '/' : '\\'
-      for (const fmt of FORMATS) {
+      for (const fmt of enabledFormats) {
         const content = generate(fmt, segments)
         await desktop.writeTextFile(`${dir}${sep}${baseName}.${fmt}`, content)
       }
@@ -130,36 +144,44 @@ export default function Export({ desktop }: ExportProps) {
                   {saveDir.split(/[\\/]/).slice(-2).join(' / ')}
                 </span>
               )}
-              {FORMATS.map((fmt) => (
-                <Button
-                  key={fmt}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-[11px] font-mono gap-1"
-                  disabled={saving !== null}
-                  onClick={() => handleSave(fmt)}
-                >
-                  {saving === fmt ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : saved.has(fmt) ? (
-                    <Check className="w-3 h-3 text-success" />
-                  ) : null}
-                  {FORMAT_LABELS[fmt]}
-                </Button>
+              {enabledFormats.map((fmt) => (
+                <Tooltip key={fmt}>
+                  <TooltipTrigger
+                    className={cn(
+                      buttonVariants({ variant: 'outline', size: 'sm' }),
+                      'h-7 px-2 text-[11px] font-mono gap-1 disabled:pointer-events-auto'
+                    )}
+                    disabled={saving !== null || !saveDir}
+                    onClick={() => void handleSave(fmt)}
+                  >
+                    {saving === fmt ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : saved.has(fmt) ? (
+                      <Check className="w-3 h-3 text-success" />
+                    ) : null}
+                    {FORMAT_LABELS[fmt]}
+                  </TooltipTrigger>
+                  {!saveDir && <TooltipContent>Choose an output folder first</TooltipContent>}
+                </Tooltip>
               ))}
-              <Button
-                size="sm"
-                className="gap-1.5 text-xs"
-                disabled={saving !== null || savingAll}
-                onClick={handleSaveAll}
-              >
-                {savingAll ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Download className="w-3.5 h-3.5" />
-                )}
-                {captions.export.actions.saveAll}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  className={cn(
+                    buttonVariants({ size: 'sm' }),
+                    'gap-1.5 text-xs disabled:pointer-events-auto'
+                  )}
+                  disabled={saving !== null || savingAll || !saveDir}
+                  onClick={() => void handleSaveAll()}
+                >
+                  {savingAll ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Download className="w-3.5 h-3.5" />
+                  )}
+                  {captions.export.actions.saveAll}
+                </TooltipTrigger>
+                {!saveDir && <TooltipContent>Choose an output folder first</TooltipContent>}
+              </Tooltip>
             </div>
           )}
         </div>
@@ -183,24 +205,32 @@ export default function Export({ desktop }: ExportProps) {
               {captions.export.labels.format}
             </p>
             <div className="space-y-1">
-              {FORMATS.map((fmt) => (
-                <button
-                  key={fmt}
-                  onClick={() => setActiveFormat(fmt)}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg transition-all ${
-                    activeFormat === fmt
-                      ? 'bg-primary/10 border border-primary/20 text-foreground'
-                      : 'border border-transparent hover:bg-secondary/50 text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-semibold">{FORMAT_LABELS[fmt]}</span>
-                  </div>
-                  <p className="text-[10px] mt-0.5 leading-relaxed opacity-70">
-                    {FORMAT_DESCRIPTIONS[fmt]}
-                  </p>
-                </button>
-              ))}
+              {FORMATS.map((fmt) => {
+                const enabled = enabledFormats.includes(fmt)
+                return (
+                  <Tooltip key={fmt}>
+                    <TooltipTrigger
+                      disabled={!enabled}
+                      onClick={() => setActiveFormat(fmt)}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all ${
+                        !enabled
+                          ? 'opacity-40 cursor-not-allowed border border-transparent text-muted-foreground'
+                          : activeFormat === fmt
+                            ? 'bg-primary/10 border border-primary/20 text-foreground'
+                            : 'border border-transparent hover:bg-secondary/50 text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[13px] font-semibold">{FORMAT_LABELS[fmt]}</span>
+                      </div>
+                      <p className="text-[10px] mt-0.5 leading-relaxed opacity-70">
+                        {FORMAT_DESCRIPTIONS[fmt]}
+                      </p>
+                    </TooltipTrigger>
+                    {!enabled && <TooltipContent>Not enabled in export settings</TooltipContent>}
+                  </Tooltip>
+                )
+              })}
             </div>
           </aside>
 

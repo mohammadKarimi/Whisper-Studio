@@ -12,7 +12,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultTask: 'transcribe',
   defaultCompute: 'auto',
   defaultOutputDirectory: null,
-  defaultExportFormats: ['srt', 'txt']
+  defaultExportFormats: ['srt', 'vtt', 'txt', 'tsv']
 }
 
 function getSettingsPath(): string {

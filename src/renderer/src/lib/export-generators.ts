@@ -1,4 +1,4 @@
-import type { WhisperSegment } from '@shared/ipc'
+import { Segment } from '@shared/ipc'
 
 function pad2(n: number): string {
   return String(n).padStart(2, '0')
@@ -20,7 +20,7 @@ function toVttTime(s: number): string {
   return `${pad2(h)}:${pad2(m)}:${pad2(sec)}.${String(ms).padStart(3, '0')}`
 }
 
-export function generateSrt(segments: WhisperSegment[]): string {
+export function generateSrt(segments: Segment[]): string {
   return (
     segments
       .map((s) => `${s.id}\n${toSrtTime(s.start)} --> ${toSrtTime(s.end)}\n${s.text}`)
@@ -28,18 +28,18 @@ export function generateSrt(segments: WhisperSegment[]): string {
   )
 }
 
-export function generateVtt(segments: WhisperSegment[]): string {
+export function generateVtt(segments: Segment[]): string {
   const body = segments
     .map((s) => `${toVttTime(s.start)} --> ${toVttTime(s.end)}\n${s.text}`)
     .join('\n\n')
   return `WEBVTT\n\n${body}\n`
 }
 
-export function generateTxt(segments: WhisperSegment[]): string {
+export function generateTxt(segments: Segment[]): string {
   return segments.map((s) => s.text).join('\n') + '\n'
 }
 
-export function generateTsv(segments: WhisperSegment[]): string {
+export function generateTsv(segments: Segment[]): string {
   const header = 'start\tend\ttext'
   const rows = segments.map((s) => `${s.start.toFixed(3)}\t${s.end.toFixed(3)}\t${s.text}`)
   return [header, ...rows].join('\n') + '\n'
@@ -56,8 +56,8 @@ export const FORMAT_LABELS: Record<ExportFormat, string> = {
 
 export const FORMAT_DESCRIPTIONS: Record<ExportFormat, string> = {
   srt: 'SubRip subtitle file, widely supported by video players',
-  vtt: 'WebVTT for HTML5 video and streaming',
-  txt: 'Plain text transcript, no timestamps',
+  vtt: 'WebVTT for HTML5 video and streaming platforms',
+  txt: 'Plain text transcript, no timestamps or formatting',
   tsv: 'Tab-separated values, import into spreadsheets'
 }
 
@@ -65,7 +65,7 @@ export const FORMAT_DESCRIPTIONS: Record<ExportFormat, string> = {
 // Format registry — add a new export format here without touching `generate`.
 // ---------------------------------------------------------------------------
 
-type GeneratorFn = (segments: WhisperSegment[]) => string
+type GeneratorFn = (segments: Segment[]) => string
 
 const GENERATORS: Record<ExportFormat, GeneratorFn> = {
   srt: generateSrt,
@@ -74,6 +74,6 @@ const GENERATORS: Record<ExportFormat, GeneratorFn> = {
   tsv: generateTsv
 }
 
-export function generate(format: ExportFormat, segments: WhisperSegment[]): string {
+export function generate(format: ExportFormat, segments: Segment[]): string {
   return GENERATORS[format](segments)
 }
