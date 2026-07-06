@@ -4,10 +4,12 @@ import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { IPC_CHANNELS, type TranscriptionRecord } from '../../../shared/ipc'
 import { parseWhisperJson } from '../../parser'
 import { getOutputDirectory } from '../../paths'
+import { readSettings } from './settings-handlers'
 
 export function registerRecordHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.listTranscriptions, async (): Promise<TranscriptionRecord[]> => {
-    const exportsDir = getOutputDirectory()
+    const settings = await readSettings()
+    const exportsDir = settings.defaultOutputDirectory ?? getOutputDirectory()
     const entries = await readdir(exportsDir, { withFileTypes: true }).catch(() => [])
     const records: TranscriptionRecord[] = []
 
@@ -46,7 +48,8 @@ export function registerRecordHandlers(): void {
       if (!id || id.includes('/') || id.includes('\\') || id.includes('..')) {
         return { ok: false }
       }
-      const dir = join(getOutputDirectory(), id)
+      const settings = await readSettings()
+      const dir = join(settings.defaultOutputDirectory ?? getOutputDirectory(), id)
       await rm(dir, { force: true, recursive: true }).catch(() => undefined)
       return { ok: true }
     }

@@ -7,6 +7,7 @@ import { TranscriptionError } from '../../../../shared/errors'
 import { type Result, err, ok } from '../../../../shared/types'
 import { parseWhisperJson } from '../../../parser'
 import { getOutputDirectory } from '../../../paths'
+import { readSettings } from '../../system/settings-handlers'
 import type {
   TranscriptionEngine,
   TranscriptionEngineContext,
@@ -63,7 +64,9 @@ async function runOpenAiWhisper(
 
   const extension = extname(request.filePath)
   const baseName = sanitizeFileName(basename(request.filePath, extension)) || 'transcript'
-  const outputDirectory = join(getOutputDirectory(), `${baseName}-${getTimestamp()}`)
+  const settings = await readSettings()
+  const baseOutputDirectory = settings.defaultOutputDirectory ?? getOutputDirectory()
+  const outputDirectory = join(baseOutputDirectory, `${baseName}-${getTimestamp()}`)
   await mkdir(outputDirectory, { recursive: true })
 
   const args = buildArgs(request, outputDirectory)

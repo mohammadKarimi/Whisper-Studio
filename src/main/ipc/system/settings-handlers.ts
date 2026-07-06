@@ -19,7 +19,7 @@ function getSettingsPath(): string {
   return join(app.getPath('userData'), 'settings.json')
 }
 
-async function readSettings(): Promise<AppSettings> {
+export async function readSettings(): Promise<AppSettings> {
   try {
     const raw = await readFile(getSettingsPath(), 'utf-8')
     return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<AppSettings>) }
