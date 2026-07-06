@@ -214,24 +214,6 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
               }
             />
           </SettingRow>
-
-          <SettingRow
-            label="Default Compute"
-            description="Hardware backend for running Whisper."
-            last
-          >
-            <SegmentedControl
-              value={settings.defaultCompute}
-              options={[
-                { label: 'CPU', value: 'cpu' },
-                { label: 'CUDA', value: 'cuda' },
-                { label: 'Auto', value: 'auto' }
-              ]}
-              onChange={(v) =>
-                void updateSettings({ defaultCompute: v as 'cpu' | 'cuda' | 'auto' })
-              }
-            />
-          </SettingRow>
         </SettingsCard>
 
         <SettingsCard icon={<FolderOutput className="h-4 w-4 text-primary" />} title="Output">
@@ -274,6 +256,8 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
         <SettingsCard icon={<Database className="h-4 w-4 text-primary" />} title="Storage">
           <SettingRow
             label="Delete All Transcriptions"
+            badge="Danger Zone"
+            badgeClassName="border-destructive/20 bg-destructive/10 text-destructive"
             description="Permanently removes all saved transcription records and output files from disk."
             last
           >

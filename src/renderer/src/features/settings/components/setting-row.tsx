@@ -5,6 +5,7 @@ interface SettingRowProps {
   description?: ReactNode
   badge?: string
   last?: boolean
+  badgeClassName?: string
   children: ReactNode
 }
 
@@ -12,6 +13,7 @@ export function SettingRow({
   label,
   description,
   badge,
+  badgeClassName,
   last = false,
   children
 }: SettingRowProps): JSX.Element {
@@ -25,7 +27,9 @@ export function SettingRow({
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-medium text-foreground">{label}</p>
           {badge && (
-            <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-primary">
+            <span
+              className={`rounded-full border ${badgeClassName ?? 'border-primary/20 bg-primary/10 text-primary'} px-2 py-0.5 text-[10px] font-semibold uppercase`}
+            >
               {badge}
             </span>
           )}

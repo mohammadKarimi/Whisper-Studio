@@ -1,5 +1,5 @@
-import { Fragment, useState } from 'react'
-import type { AppApi, ModelApi, TranscriptionApi } from '@shared/ipc'
+import { Fragment, useState, useEffect } from 'react'
+import type { AppApi, ModelApi, SettingsApi, TranscriptionApi } from '@shared/ipc'
 import { useNavigate } from '@/app/navigation'
 import { Button } from '@/components/ui/button'
 import { captions } from '@/lib/strings'
@@ -12,7 +12,7 @@ import { ArrowLeft, ArrowRight, ChevronRight, Sparkles } from 'lucide-react'
 const STEPS = captions.newTranscription.steps
 
 interface NewTranscriptionProps {
-  desktop: AppApi & ModelApi & TranscriptionApi
+  desktop: AppApi & ModelApi & TranscriptionApi & Pick<SettingsApi, 'getSettings'>
 }
 
 export default function NewTranscription({ desktop }: NewTranscriptionProps) {
@@ -25,6 +25,20 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
   const [outputFormats, setOutputFormats] = useState<string[]>(() => [
     ...captions.newTranscription.initialOutputFormats
   ])
+
+  useEffect(() => {
+    void desktop.getSettings().then((s) => {
+      setSettings((prev) => ({
+        ...prev,
+        language: s.defaultLanguage ?? prev.language,
+        model: s.defaultModel ?? prev.model,
+        compute: s.defaultCompute !== 'auto' ? s.defaultCompute : prev.compute
+      }))
+      if (s.defaultExportFormats.length > 0) {
+        setOutputFormats(s.defaultExportFormats)
+      }
+    })
+  }, [desktop])
 
   return (
     <div className="p-8 max-w-[900px] mx-auto">
