@@ -1,6 +1,6 @@
 import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { basename, join } from 'node:path'
-import { writeFile } from 'node:fs/promises'
+import { copyFile, writeFile } from 'node:fs/promises'
 import {
   DEFAULT_TRANSCRIPTION_ENGINE_ID,
   IPC_CHANNELS,
@@ -36,10 +36,22 @@ export function registerTranscriptionHandlers(): void {
       const { command, exitCode, outputDirectory, outputFiles, segments, stdout, stderr } =
         runResult.value
 
+      const copiedFilePath = join(outputDirectory, basename(request.filePath))
+      let copySucceeded = false
+      await copyFile(request.filePath, copiedFilePath)
+        .then(() => {
+          copySucceeded = true
+        })
+        .catch(() => {
+          console.warn(
+            `[transcription] Failed to copy source file to output directory: ${request.filePath}`
+          )
+        })
+
       const record: TranscriptionRecord = {
         id: basename(outputDirectory),
         sourceFileName: basename(request.filePath),
-        sourceFilePath: request.filePath,
+        sourceFilePath: copySucceeded ? copiedFilePath : request.filePath,
         engine: engine.id,
         model: request.model || 'base',
         language: request.language || 'auto',
