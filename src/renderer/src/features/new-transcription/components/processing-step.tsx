@@ -176,6 +176,8 @@ export default function Processing({
         diarization: settings.diarization,
         filePath: file.path,
         formats: outputFormats,
+        hotwords: settings.hotwords.trim() || undefined,
+        initialPrompt: settings.initialPrompt.trim() || undefined,
         language: settings.language,
         model: settings.model,
         noiseReduction: settings.noiseReduction,

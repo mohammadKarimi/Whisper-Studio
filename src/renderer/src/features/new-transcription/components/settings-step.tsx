@@ -12,7 +12,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, Info, Cpu, Zap, Brain, Users, Volume2, Waves, Languages } from 'lucide-react'
+import { ChevronDown, Info, Cpu, Brain, Users, Languages } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { captions } from '@/lib/strings'
 import { WHISPER_CATALOG_MODELS } from '@shared/constants'
@@ -23,6 +23,8 @@ const settingRows = captions.newTranscription.settings.rows
 export interface TranscriptionSettings {
   compute: string
   diarization: boolean
+  hotwords: string
+  initialPrompt: string
   language: string
   model: string
   noiseReduction: boolean
@@ -353,19 +355,6 @@ export default function StepSettings({
       <div className="glass-panel relative z-10 rounded-xl divide-y divide-border/50">
         <div className="px-5">
           <SettingRow
-            icon={Zap}
-            label={settingRows.wordTimestamps.label}
-            description={settingRows.wordTimestamps.description}
-            tooltip={settingRows.wordTimestamps.tooltip}
-          >
-            <Switch
-              checked={settings.wordTimestamps}
-              onCheckedChange={(v) => update('wordTimestamps', v)}
-            />
-          </SettingRow>
-        </div>
-        <div className="px-5">
-          <SettingRow
             icon={Users}
             label={settingRows.diarization.label}
             description={settingRows.diarization.description}
@@ -404,29 +393,35 @@ export default function StepSettings({
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-3">
           <div className="glass-panel relative z-0 rounded-xl divide-y divide-border/50">
-            <div className="px-5">
-              <SettingRow
-                icon={Volume2}
-                label={settingRows.removeSilence.label}
-                description={settingRows.removeSilence.description}
-              >
-                <Switch
-                  checked={settings.removeSilence}
-                  onCheckedChange={(v) => update('removeSilence', v)}
-                />
-              </SettingRow>
+            <div className="px-5 py-4">
+              <label className="block text-[13px] font-medium text-foreground">
+                {captions.newTranscription.settings.initialPrompt.label}
+              </label>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                {captions.newTranscription.settings.initialPrompt.hint}
+              </p>
+              <textarea
+                value={settings.initialPrompt}
+                onChange={(event) => update('initialPrompt', event.target.value)}
+                placeholder={captions.newTranscription.settings.initialPrompt.placeholder}
+                rows={4}
+                className="mt-3 min-h-24 w-full resize-y rounded-md border border-input bg-background/60 px-3 py-2 text-sm leading-relaxed text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
             </div>
-            <div className="px-5">
-              <SettingRow
-                icon={Waves}
-                label={settingRows.noiseReduction.label}
-                description={settingRows.noiseReduction.description}
-              >
-                <Switch
-                  checked={settings.noiseReduction}
-                  onCheckedChange={(v) => update('noiseReduction', v)}
-                />
-              </SettingRow>
+            <div className="px-5 py-4">
+              <label className="block text-[13px] font-medium text-foreground">
+                {captions.newTranscription.settings.hotwords.label}
+              </label>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                {captions.newTranscription.settings.hotwords.hint}
+              </p>
+              <textarea
+                value={settings.hotwords}
+                onChange={(event) => update('hotwords', event.target.value)}
+                placeholder={captions.newTranscription.settings.hotwords.placeholder}
+                rows={3}
+                className="mt-3 min-h-20 w-full resize-y rounded-md border border-input bg-background/60 px-3 py-2 text-sm leading-relaxed text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
             </div>
           </div>
         </CollapsibleContent>
