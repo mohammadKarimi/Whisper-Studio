@@ -307,6 +307,8 @@ export const captions = {
     initialSettings: {
       language: 'Auto',
       model: '',
+      initialPrompt: '',
+      hotwords: '',
       compute: 'cpu',
       wordTimestamps: false,
       diarization: false,
@@ -368,6 +370,16 @@ export const captions = {
         note: 'Note'
       },
       advancedSettings: 'Advanced Settings',
+      initialPrompt: {
+        label: 'Initial Prompt',
+        placeholder: 'Names, technical terms, spelling preferences, or context for this audio...',
+        hint: 'WhisperX passes this to the transcription model as context. Use it for proper nouns, jargon, acronyms, preferred spelling, or a short summary of the recording.'
+      },
+      hotwords: {
+        label: 'Hotwords',
+        placeholder: 'هوش مصنوعی، ChatGPT، WhisperX',
+        hint: 'Use hotwords for exact terms the model keeps misspelling. For example, add هوش مصنوعی here if it is heard as حوش مصنوعی.'
+      },
       languages: WHISPER_LANGUAGES.map((language) => ({ value: language, label: language })),
       rows: {
         language: {
@@ -386,11 +398,6 @@ export const captions = {
           description: 'Processing hardware',
           tooltip: 'GPU is significantly faster. Falls back to CPU if no compatible GPU is found.'
         },
-        wordTimestamps: {
-          label: 'Word Timestamps',
-          description: 'Precise timing for each word',
-          tooltip: 'Enables word-level timing data, useful for subtitle editing.'
-        },
         diarization: {
           label: 'Speaker Diarization',
           description: "Identify who's speaking",
@@ -399,14 +406,6 @@ export const captions = {
         translate: {
           label: 'Translate to English',
           description: 'Translate non-English audio to English'
-        },
-        removeSilence: {
-          label: 'Remove Silence',
-          description: 'Strip silent segments from output'
-        },
-        noiseReduction: {
-          label: 'Noise Reduction',
-          description: 'Pre-process audio to reduce background noise'
         }
       }
     },

@@ -144,6 +144,8 @@ export interface WhisperTranscriptionRequest {
   engine?: TranscriptionEngineType
   filePath: string
   formats: string[]
+  hotwords?: string
+  initialPrompt?: string
   language: string
   model: string
   noiseReduction: boolean

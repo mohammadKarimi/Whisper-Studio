@@ -45,6 +45,16 @@ function buildArgs(
     args.push('--language', language)
   }
 
+  const initialPrompt = request.initialPrompt?.trim()
+  if (initialPrompt) {
+    args.push('--initial_prompt', initialPrompt)
+  }
+
+  const hotwords = request.hotwords?.trim()
+  if (hotwords) {
+    args.push('--hotwords', hotwords)
+  }
+
   if (request.diarization && hfToken) {
     args.push('--diarize', '--hf_token', hfToken)
   }
