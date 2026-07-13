@@ -386,18 +386,6 @@ export default function StepSettings({
           <div className="glass-panel relative z-0 rounded-xl divide-y divide-border/50">
             <div className="px-5">
               <SettingRow
-                icon={Languages}
-                label={settingRows.translate.label}
-                description={settingRows.translate.description}
-              >
-                <Switch
-                  checked={settings.translate}
-                  onCheckedChange={(v) => update('translate', v)}
-                />
-              </SettingRow>
-            </div>
-            <div className="px-5">
-              <SettingRow
                 icon={Volume2}
                 label={settingRows.removeSilence.label}
                 description={settingRows.removeSilence.description}

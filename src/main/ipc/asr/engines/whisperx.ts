@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
-import { basename, dirname, extname, join } from 'node:path'
+import { basename, extname, join } from 'node:path'
 import { StringDecoder } from 'node:string_decoder'
 import type { WhisperTranscriptionRequest } from '../../../../shared/ipc'
 import { TranscriptionError } from '../../../../shared/errors'
@@ -15,8 +15,15 @@ import type {
 } from './types'
 import { getPythonEnv, getTimestamp, normalizeLanguage, sanitizeFileName } from '../../utils'
 
-function buildArgs(request: WhisperTranscriptionRequest, outputDir: string): string[] {
-  const device = request.compute === 'gpu' ? 'cuda' : 'cpu'
+function buildArgs(
+  request: WhisperTranscriptionRequest,
+  outputDir: string,
+  hfToken: string | null
+): string[] {
+  const isCuda = request.compute === 'gpu'
+  const device = isCuda ? 'cuda' : 'cpu'
+  // float16 is the recommended compute type for GPU; int8 is faster than float32 on CPU.
+  const computeType = isCuda ? 'float16' : 'int8'
   const language = normalizeLanguage(request.language)
   const model = request.model || 'base'
 
@@ -30,26 +37,22 @@ function buildArgs(request: WhisperTranscriptionRequest, outputDir: string): str
     outputDir,
     '--device',
     device,
-    '--verbose',
-    'True'
+    '--compute_type',
+    computeType
   ]
 
   if (language) {
     args.push('--language', language)
   }
 
-  if (request.translate) {
-    args.push('--task', 'translate')
-  }
-
-  if (request.wordTimestamps) {
-    args.push('--word_timestamps', 'True')
+  if (request.diarization && hfToken) {
+    args.push('--diarize', '--hf_token', hfToken)
   }
 
   return args
 }
 
-async function runOpenAiWhisper(
+async function runWhisperX(
   request: WhisperTranscriptionRequest,
   { emitOutput, emitProgress }: TranscriptionEngineContext
 ): Promise<Result<TranscriptionEngineResult, TranscriptionError>> {
@@ -69,18 +72,18 @@ async function runOpenAiWhisper(
   const outputDirectory = join(baseOutputDirectory, `${baseName}-${getTimestamp()}`)
   await mkdir(outputDirectory, { recursive: true })
 
-  const args = buildArgs(request, outputDirectory)
-  const whisperBin = join(
+  const hfToken = settings.hfToken ?? null
+  const args = buildArgs(request, outputDirectory, hfToken)
+  const whisperxBin = join(
     getVenvBinPath(),
-    process.platform === 'win32' ? 'whisper.exe' : 'whisper'
+    process.platform === 'win32' ? 'whisperx.exe' : 'whisperx'
   )
-  const command = `${whisperBin} ${args.join(' ')}`
+  const command = `${whisperxBin} ${args.join(' ')}`
 
   emitProgress({ phase: 'sending-command', state: 'complete', message: command })
 
   return new Promise<Result<TranscriptionEngineResult, TranscriptionError>>((resolve) => {
-    const child = spawn(whisperBin, args, {
-      cwd: dirname(request.filePath),
+    const child = spawn(whisperxBin, args, {
       env: getPythonEnv(),
       windowsHide: true
     })
@@ -132,7 +135,7 @@ async function runOpenAiWhisper(
         message:
           exitCode === 0
             ? 'Transcription complete.'
-            : `Whisper exited with code ${exitCode ?? 'unknown'}.`
+            : `WhisperX exited with code ${exitCode ?? 'unknown'}.`
       })
 
       resolve(
@@ -151,8 +154,8 @@ async function runOpenAiWhisper(
   })
 }
 
-export const openAiWhisperEngine: TranscriptionEngine = {
-  id: 'openai-whisper',
-  label: 'OpenAI Whisper',
-  run: runOpenAiWhisper
+export const whisperxEngine: TranscriptionEngine = {
+  id: 'whisperx',
+  label: 'WhisperX',
+  run: runWhisperX
 }

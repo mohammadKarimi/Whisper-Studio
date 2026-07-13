@@ -62,7 +62,7 @@ Saves via IPC: fs:write-text-file
 
 The Models page checks system prerequisites, installs missing ones via the
 platform's package manager, and gates model downloads until Python and
-`openai-whisper` are present.
+`whisperx` is present.
 
 ### Check & gating flow
 
@@ -73,7 +73,7 @@ flowchart TD
     C --> D[checkPrerequisites in main]
     D --> D1[checkPython]
     D --> D2[checkCommandVersion ffmpeg]
-    D --> D3[checkPythonPackages: openai-whisper, torch]
+    D --> D3[checkPythonPackages: whisperx, torch]
     D --> D4[checkCudaWithTorch]
     D4 --> D5{platform == darwin?}
     D5 -->|yes| D6[cuda = unsupported]
@@ -98,7 +98,7 @@ flowchart TD
 
     F --> G{Prerequisite type}
     G -->|python / ffmpeg| H[installSystemPrerequisite]
-    G -->|openai-whisper / torch| I[installViaPip]
+    G -->|whisperx / torch| I[installViaPip]
     G -->|cuda| J[installCuda]
 
     H --> H1{platform}

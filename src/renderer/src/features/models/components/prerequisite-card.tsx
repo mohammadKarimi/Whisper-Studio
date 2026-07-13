@@ -39,12 +39,12 @@ const prerequisiteIcons: Record<PrerequisiteCheckId, LucideIcon> = {
   python: Code2,
   ffmpeg: Video,
   cuda: Cpu,
-  'openai-whisper': Package,
+  'whisperx': Package,
   torch: Terminal
 }
 
 // Prerequisites that require a working Python installation before they can be installed.
-const pythonDependentIds = new Set<PrerequisiteCheckId>(['openai-whisper', 'torch', 'cuda'])
+const pythonDependentIds = new Set<PrerequisiteCheckId>(['whisperx', 'torch', 'cuda'])
 
 const statusConfig = {
   ok: {

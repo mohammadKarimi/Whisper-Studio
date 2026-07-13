@@ -16,12 +16,14 @@ import {
   FolderOutput,
   Database,
   Info,
-  Heart
+  Heart,
+  KeyRound
 } from 'lucide-react'
 import { WHISPER_LANGUAGES } from '@shared/constants'
 import type { AppInfo, DesktopApi, UpdateCheckResult } from '@shared/ipc'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -31,7 +33,6 @@ import {
 } from '@/components/ui/select'
 import { AboutLinkCard } from './components/about-link-card'
 import { DeleteAllConfirmModal } from './components/delete-all-confirm-modal'
-import { SegmentedControl } from './components/segmented-control'
 import { SettingsCard } from './components/settings-card'
 import { SettingRow } from './components/setting-row'
 import { useSettings } from './use-settings'
@@ -199,20 +200,20 @@ export function SettingsPage({ desktop }: SettingsPageProps): JSX.Element {
           </SettingRow>
 
           <SettingRow
-            label="Default Task"
-            description="Transcribe audio or translate to English."
-            badge="Soon"
+            label="HuggingFace Token"
+            description="Required for diarization (speaker separation). Get yours at huggingface.co/settings/tokens."
+            last
           >
-            <SegmentedControl
-              value={settings.defaultTask}
-              options={[
-                { label: 'Transcribe', value: 'transcribe' },
-                { label: 'Translate', value: 'translate' }
-              ]}
-              onChange={(v) =>
-                void updateSettings({ defaultTask: v as 'transcribe' | 'translate' })
-              }
-            />
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Input
+                type="password"
+                value={settings.hfToken ?? ''}
+                placeholder="hf_..."
+                className="w-56 font-mono text-sm"
+                onChange={(e) => void updateSettings({ hfToken: e.target.value.trim() || null })}
+              />
+            </div>
           </SettingRow>
         </SettingsCard>
 

@@ -263,7 +263,7 @@ export const WHISPER_DOWNLOADABLE_IDS: readonly string[] = [
  * Target Python version used consistently across all platforms.
  *
  * Pinned to a release with full prebuilt wheel coverage for `torch` and
- * `openai-whisper`. Newer Python versions often lack these wheels, causing
+ * `whisperx`. Newer Python versions often lack these wheels, causing
  * source builds or install failures. Used by both interpreter discovery
  * (preferred over bare `python`/`python3`) and the platform installers.
  */

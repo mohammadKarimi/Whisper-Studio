@@ -2,7 +2,7 @@ import { app } from 'electron'
 import { join } from 'node:path'
 
 export function getOutputDirectory(): string {
-  return join(app.getPath('documents'), 'Whisper Studio', 'exports')
+  return join(app.getPath('documents'), 'Whisper Studio', 'transcriptions')
 }
 
 /** Root path of the app-managed Python virtual environment. */

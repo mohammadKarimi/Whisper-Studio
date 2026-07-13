@@ -2,11 +2,11 @@ import {
   DEFAULT_TRANSCRIPTION_ENGINE_ID,
   type TranscriptionEngineType
 } from '../../../../shared/ipc'
-import { openAiWhisperEngine } from './openai-whisper'
+import { whisperxEngine } from './whisperx'
 import type { TranscriptionEngine } from './types'
 
 const transcriptionEngines = {
-  'openai-whisper': openAiWhisperEngine
+  'whisperx': whisperxEngine
 } satisfies Record<TranscriptionEngineType, TranscriptionEngine>
 
 export function getTranscriptionEngine(

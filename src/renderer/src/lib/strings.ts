@@ -159,10 +159,10 @@ export const captions = {
           desc: 'Deep learning runtime for Whisper and GPU support'
         },
         {
-          id: 'openai-whisper',
-          name: 'openai-whisper',
+          id: 'whisperx',
+          name: 'whisperx',
           required: 'any',
-          desc: 'OpenAI Whisper transcription library (pip)'
+          desc: 'WhisperX transcription library with word alignment (pip)'
         },
         {
           id: 'cuda',
@@ -241,7 +241,7 @@ export const captions = {
         downloaded: 'Downloaded',
         downloadFailed: 'Download failed'
       },
-      blockedHint: 'Install Python and openai-whisper before downloading models'
+      blockedHint: 'Install Python and whisperx before downloading models'
     }
   },
   studio: {
@@ -497,9 +497,9 @@ export const captions = {
       {
         id: 'prepare',
         label: 'Checking Environment',
-        desc: 'Verifying Python and openai-whisper'
+        desc: 'Verifying Python and whisperx'
       },
-      { id: 'transcribe', label: 'Transcribing', desc: 'Processing audio with OpenAI Whisper' },
+      { id: 'transcribe', label: 'Transcribing', desc: 'Processing audio with WhisperX' },
       { id: 'export', label: 'Saving Files', desc: 'Writing output files to disk' }
     ]
   },

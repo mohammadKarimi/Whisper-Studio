@@ -30,7 +30,7 @@ flowchart TD
     G --> O
 
     L[checkCommandVersion\nffmpeg -version] --> O
-    M[checkPythonPackages\nimportlib.metadata\nopenai-whisper + torch ≥ 2.0] --> O
+    M[checkPythonPackages\nimportlib.metadata\nwhisperx + torch ≥ 2.0] --> O
     N[checkCudaWithTorch\ntorch.cuda.is_available\ntorch.version.cuda] --> P{macOS?}
     P -- Yes --> Q[cuda 🚫 unsupported\nhidden from UI]
     P -- No --> R{torch GPU available?}
@@ -133,14 +133,14 @@ flowchart TD
     L -- No --> N([⚠ Packages installed\nbut GPU still unavailable\ncheck NVIDIA drivers])
 ```
 
-### 2d · openai-whisper
+### 2d · whisperx
 
 ```mermaid
 flowchart TD
-    A([Install openai-whisper]) --> B[Resolve Python\nvenv Python preferred]
+    A([Install whisperx]) --> B[Resolve Python\nvenv Python preferred]
     B --> C{Python found\nand version ok?}
     C -- No --> D([❌ Install Python first])
-    C -- Yes --> E["pip install openai-whisper\n--upgrade --retries 5 --timeout 120\n--no-cache-dir\n⏱ timeout 30 min"]
+    C -- Yes --> E["pip install whisperx\n--upgrade --retries 5 --timeout 120\n--no-cache-dir\n⏱ timeout 30 min"]
     E --> F{Exit 0?}
     F -- Yes --> G([✅ Done])
     F -- No --> H([❌ Failed — error shown])
@@ -170,7 +170,7 @@ flowchart LR
     A[python] --> B[ffmpeg] --> C{CUDA will\nbe installed?}
     C -- Yes --> D[skip torch\nCUDA installer handles it]
     C -- No --> E[torch]
-    D --> F[openai-whisper]
+    D --> F[whisperx]
     E --> F
     F --> G[cuda]
 ```

@@ -70,13 +70,16 @@ export function usePrerequisites(desktop: AppApi) {
 
       // Overlay the error message on top of the refreshed status so the user
       // can read what went wrong while the card still reflects the real state.
+      // Exception: if the refreshed item already has a `detail` that explains
+      // the current situation (e.g. CUDA detected but torch is CPU-only), skip
+      // setting the stale install error — it would only duplicate/contradict it.
       if (!result.ok) {
         setItems((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? { ...item, error: result.stderr || prerequisitesCaptions.installFailed }
-              : item
-          )
+          prev.map((item) => {
+            if (item.id !== id) return item
+            if (item.detail) return item
+            return { ...item, error: result.stderr || prerequisitesCaptions.installFailed }
+          })
         )
       }
     },
@@ -108,7 +111,7 @@ export function usePrerequisites(desktop: AppApi) {
   const isInstalling = items.some((item) => item.status === 'installing')
   const isBusy = isChecking || isInstalling
   const pythonOk = items.find((item) => item.id === 'python')?.status === 'ok'
-  const whisperOk = items.find((item) => item.id === 'openai-whisper')?.status === 'ok'
+  const whisperOk = items.find((item) => item.id === 'whisperx')?.status === 'ok'
   const torchOk = items.find((item) => item.id === 'torch')?.status === 'ok'
   const fixableItems = visibleItems.filter(
     (item) => item.status === 'missing' || item.status === 'attention'
@@ -119,7 +122,7 @@ export function usePrerequisites(desktop: AppApi) {
   // Install all fixable items in dependency order. When CUDA will be installed
   // its installer also handles torch (with CUDA index URL), so torch is skipped.
   const handleFixAll = useCallback(async (): Promise<void> => {
-    const order: PrerequisiteCheckId[] = ['python', 'ffmpeg', 'torch', 'openai-whisper', 'cuda']
+    const order: PrerequisiteCheckId[] = ['python', 'ffmpeg', 'torch', 'whisperx', 'cuda']
     const cudaItem = items.find((c) => c.id === 'cuda')
     const cudaWillBeInstalled =
       cudaItem &&

@@ -53,7 +53,7 @@ export interface SystemStatus {
   status: string
 }
 
-export type PrerequisiteCheckId = 'python' | 'ffmpeg' | 'cuda' | 'openai-whisper' | 'torch'
+export type PrerequisiteCheckId = 'python' | 'ffmpeg' | 'cuda' | 'whisperx' | 'torch'
 
 export type PrerequisiteCheckStatus = 'ok' | 'missing' | 'unsupported' | 'attention'
 
@@ -135,9 +135,9 @@ export interface WhisperTranscriptionResult {
   transcriptPath?: string
 }
 
-export type TranscriptionEngineType = 'openai-whisper'
+export type TranscriptionEngineType = 'whisperx'
 
-export const DEFAULT_TRANSCRIPTION_ENGINE_ID: TranscriptionEngineType = 'openai-whisper'
+export const DEFAULT_TRANSCRIPTION_ENGINE_ID: TranscriptionEngineType = 'whisperx'
 
 export interface WhisperTranscriptionRequest {
   compute: string
@@ -265,6 +265,7 @@ export interface AppSettings {
   defaultCompute: 'cpu' | 'cuda' | 'auto'
   defaultOutputDirectory: string | null
   defaultExportFormats: string[]
+  hfToken: string | null
 }
 
 /** Result returned by the update check IPC call. */

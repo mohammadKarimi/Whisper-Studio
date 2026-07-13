@@ -12,7 +12,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultTask: 'transcribe',
   defaultCompute: 'auto',
   defaultOutputDirectory: null,
-  defaultExportFormats: ['srt', 'vtt', 'txt', 'tsv']
+  defaultExportFormats: ['srt', 'vtt', 'txt', 'tsv'],
+  hfToken: null
 }
 
 function getSettingsPath(): string {
