@@ -44,15 +44,23 @@ export function useSegmentSave(
         record.outputDirectory.substring(0, record.outputDirectory.lastIndexOf(sep))
       const outputDirectory = `${baseDir}${sep}${record.id}`
       const metaPath = `${outputDirectory}${sep}whisper-studio.json`
+      const speakerNames: Record<string, string> = {}
+      for (const s of segmentsRef.current) {
+        if (s.speaker && !speakerNames[s.speaker]) {
+          speakerNames[s.speaker] = s.name
+        }
+      }
       const updatedRecord: TranscriptionRecord = {
         ...record,
         outputDirectory,
         editedAt: Date.now(),
+        ...(Object.keys(speakerNames).length > 0 ? { speakerNames } : {}),
         segments: segmentsRef.current.map((s) => ({
           id: s.id,
           start: s.startSeconds,
           end: s.endSeconds,
-          text: s.text
+          text: s.text,
+          ...(s.speaker ? { speaker: s.speaker } : {})
         }))
       }
       await desktop.writeTextFile(metaPath, JSON.stringify(updatedRecord, null, 2))

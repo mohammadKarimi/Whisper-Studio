@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from '@/app/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,6 +47,7 @@ export default function Studio({ desktop }: StudioProps) {
     handleReplaceAll,
     handleTimeUpdate,
     handleSegmentTextChange,
+    renameSpeaker,
     audioSrc,
     fileName,
     modelDisplay,
@@ -62,12 +64,25 @@ export default function Studio({ desktop }: StudioProps) {
           id: s.id,
           start: s.startSeconds,
           end: s.endSeconds,
-          text: s.text
+          text: s.text,
+          ...(s.speaker ? { speaker: s.speaker } : {})
         }))
       })
     }
     navigateTo('export')
   }
+
+  const speakers = useMemo(() => {
+    const map = new Map<string, { speaker: string; name: string; segments: number }>()
+    for (const seg of segments) {
+      if (!seg.speaker) continue
+      if (!map.has(seg.speaker)) {
+        map.set(seg.speaker, { speaker: seg.speaker, name: seg.name, segments: 0 })
+      }
+      map.get(seg.speaker)!.segments++
+    }
+    return Array.from(map.values())
+  }, [segments])
 
   return (
     <div className="flex flex-col h-full">
@@ -263,6 +278,8 @@ export default function Studio({ desktop }: StudioProps) {
           activeSpeaker={activeSpeaker}
           onSelectSpeaker={setActiveSpeaker}
           stats={panelStats}
+          speakers={speakers}
+          onRename={renameSpeaker}
         />
       </div>
 

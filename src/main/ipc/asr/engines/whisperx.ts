@@ -73,6 +73,17 @@ async function runWhisperX(
   await mkdir(outputDirectory, { recursive: true })
 
   const hfToken = settings.hfToken ?? null
+
+  if (request.diarization && !hfToken) {
+    return err(
+      new TranscriptionError(
+        'Diarization requires a HuggingFace token. Please add your HF token in Settings before enabling speaker detection.',
+        null,
+        ''
+      )
+    )
+  }
+
   const args = buildArgs(request, outputDirectory, hfToken)
   const whisperxBin = join(
     getVenvBinPath(),

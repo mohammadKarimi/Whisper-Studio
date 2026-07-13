@@ -24,13 +24,14 @@ export async function parseWhisperJson(
   try {
     const raw = await readFile(jsonPath, 'utf8')
     const parsed = JSON.parse(raw) as {
-      segments?: Array<{ id: number; start: number; end: number; text: string }>
+      segments?: Array<{ id: number; start: number; end: number; text: string; speaker?: string }>
     }
     const segments: Segment[] = (parsed.segments ?? []).map((s, i) => ({
       id: i + 1,
       start: s.start,
       end: s.end,
-      text: s.text.trim()
+      text: s.text.trim(),
+      ...(s.speaker ? { speaker: s.speaker } : {})
     }))
     const jsonFile: WhisperOutputFile = {
       format: 'json',

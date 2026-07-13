@@ -1,10 +1,18 @@
-import { Clock, Gauge, Hash, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import { Clock, Gauge, Hash, TrendingUp, User, Pencil, Check } from 'lucide-react'
 import { captions } from '@/lib/strings'
-import { Banner } from '../../../components/banner'
+
+interface SpeakerInfo {
+  speaker: string
+  name: string
+  segments: number
+}
 
 interface SpeakerPanelProps {
   activeSpeaker: string | null
   onSelectSpeaker: (speaker: string | null) => void
+  onRename?: (speakerId: string, newName: string) => void
+  speakers?: SpeakerInfo[]
   stats?: { label: string; value: string }[]
 }
 
@@ -17,9 +25,104 @@ const DEFAULT_STATS = [
   { icon: TrendingUp, ...captions.studio.speakerPanel.stats[3] }
 ]
 
+const SPEAKER_BADGE_COLORS = [
+  'bg-chart-1/10 text-chart-1 border-chart-1/20',
+  'bg-primary/10 text-primary border-primary/20',
+  'bg-chart-2/10 text-chart-2 border-chart-2/20',
+  'bg-chart-3/10 text-chart-3 border-chart-3/20',
+  'bg-chart-4/10 text-chart-4 border-chart-4/20'
+]
+
+function SpeakerRow({
+  speaker,
+  index,
+  isActive,
+  onSelect,
+  onRename
+}: {
+  speaker: SpeakerInfo
+  index: number
+  isActive: boolean
+  onSelect: () => void
+  onRename?: (speakerId: string, newName: string) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(speaker.name)
+  const badgeColor = SPEAKER_BADGE_COLORS[index % SPEAKER_BADGE_COLORS.length]
+
+  function commitRename() {
+    const trimmed = draft.trim()
+    if (trimmed && trimmed !== speaker.name) {
+      onRename?.(speaker.speaker, trimmed)
+    } else {
+      setDraft(speaker.name)
+    }
+    setEditing(false)
+  }
+
+  return (
+    <div
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
+        isActive ? 'bg-primary/5 border-primary/20' : 'border-border/30 bg-secondary/10'
+      }`}
+    >
+      <button onClick={onSelect} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+        <div
+          className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${badgeColor}`}
+        >
+          <User className="w-3.5 h-3.5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          {editing ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitRename()
+                if (e.key === 'Escape') {
+                  setDraft(speaker.name)
+                  setEditing(false)
+                }
+                e.stopPropagation()
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full bg-transparent border-b border-primary/50 outline-none text-[13px] font-medium pb-0.5"
+            />
+          ) : (
+            <p className="text-[13px] font-medium truncate">{speaker.name}</p>
+          )}
+          <p className="text-[11px] text-muted-foreground">
+            {speaker.segments} {captions.studio.speakerPanel.segmentsLabel}
+          </p>
+        </div>
+      </button>
+      {onRename && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            if (editing) {
+              commitRename()
+            } else {
+              setDraft(speaker.name)
+              setEditing(true)
+            }
+          }}
+          className="shrink-0 p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {editing ? <Check className="w-3 h-3 text-success" /> : <Pencil className="w-3 h-3" />}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function SpeakerPanel({
   activeSpeaker,
   onSelectSpeaker,
+  onRename,
+  speakers,
   stats
 }: SpeakerPanelProps): JSX.Element {
   const resolvedStats = stats
@@ -42,12 +145,22 @@ export default function SpeakerPanel({
         )}
       </div>
       <div className="space-y-2">
-        {/* TODO: Speaker diarization — re-enable once the upstream model bug is resolved */}
-        <Banner
-          emphasis=" Note: The speaker list is currently disabled"
-          detail="due to a bug in the speaker diarization model that causes it to produce inconsistent results. This will be fixed in a future update."
-          className="text-[11px]"
-        />
+        {speakers && speakers.length > 0 ? (
+          speakers.map((s, i) => (
+            <SpeakerRow
+              key={s.speaker}
+              speaker={s}
+              index={i}
+              isActive={activeSpeaker === s.speaker}
+              onSelect={() => onSelectSpeaker(activeSpeaker === s.speaker ? null : s.speaker)}
+              onRename={onRename}
+            />
+          ))
+        ) : (
+          <p className="text-[12px] text-muted-foreground px-1">
+            No speaker data. Enable diarization when transcribing.
+          </p>
+        )}
       </div>
       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 mt-6">
         {captions.studio.speakerPanel.headings.statistics}

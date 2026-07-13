@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
-import type { ModelApi, DownloadedWhisperModel } from '@shared/ipc'
+import type { ModelApi, DownloadedWhisperModel, SettingsApi } from '@shared/ipc'
 import { useNavigate } from '@/app/navigation'
 import { Banner } from '@/components/banner'
 import { Input } from '@/components/ui/input'
@@ -77,7 +77,7 @@ function SettingRow({
 }
 
 interface StepSettingsProps {
-  desktop: ModelApi
+  desktop: ModelApi & Pick<SettingsApi, 'getSettings'>
   settings: TranscriptionSettings
   setSettings: Dispatch<SetStateAction<TranscriptionSettings>>
 }
@@ -96,6 +96,7 @@ export default function StepSettings({
   const [downloadedModels, setDownloadedModels] = useState<DownloadedWhisperModel[]>([])
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   const [languageSearch, setLanguageSearch] = useState('')
+  const [hfToken, setHfToken] = useState<string | null>(null)
 
   const update = (key: keyof TranscriptionSettings, value: boolean | string): void =>
     setSettings({ ...settings, [key]: value })
@@ -138,6 +139,10 @@ export default function StepSettings({
       isActive = false
     }
   }, [desktop, setSettings])
+
+  useEffect(() => {
+    void desktop.getSettings().then((s) => setHfToken(s.hfToken))
+  }, [desktop])
 
   const hasDownloadedModels = downloadedModels.length > 0
   const selectedDownloadedModel = downloadedModels.find((model) => model.name === settings.model)
@@ -371,6 +376,21 @@ export default function StepSettings({
               onCheckedChange={(v) => update('diarization', v)}
             />
           </SettingRow>
+          {settings.diarization && !hfToken && (
+            <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2">
+              <p className="text-[12px] text-destructive">
+                Diarization requires a HuggingFace token.{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('settings')}
+                  className="underline hover:no-underline"
+                >
+                  Add it in Settings
+                </button>
+                .
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

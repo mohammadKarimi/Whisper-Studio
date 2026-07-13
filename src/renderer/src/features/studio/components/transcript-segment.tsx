@@ -1,25 +1,19 @@
 import React from 'react'
 import { User, Edit3, Check, Copy } from 'lucide-react'
-import { captions } from '@/lib/strings'
 import type { SrtSegment } from '@/lib/srt-parser'
 
-const speakerPanel = captions.studio.speakerPanel
-const SPEAKER_COLORS = {
-  [speakerPanel.speakers[0].speaker]: {
-    badge: 'bg-chart-1/10 text-chart-1 border-chart-1/20',
-    dot: 'bg-chart-1',
-    bar: 'bg-chart-1'
-  },
-  [speakerPanel.speakers[1].speaker]: {
-    badge: 'bg-primary/10 text-primary border-primary/20',
-    dot: 'bg-primary',
-    bar: 'bg-primary'
-  },
-  [speakerPanel.speakers[2].speaker]: {
-    badge: 'bg-chart-2/10 text-chart-2 border-chart-2/20',
-    dot: 'bg-chart-2',
-    bar: 'bg-chart-2'
-  }
+const SPEAKER_COLOR_PALETTE = [
+  { badge: 'bg-chart-1/10 text-chart-1 border-chart-1/20', dot: 'bg-chart-1', bar: 'bg-chart-1' },
+  { badge: 'bg-primary/10 text-primary border-primary/20', dot: 'bg-primary', bar: 'bg-primary' },
+  { badge: 'bg-chart-2/10 text-chart-2 border-chart-2/20', dot: 'bg-chart-2', bar: 'bg-chart-2' },
+  { badge: 'bg-chart-3/10 text-chart-3 border-chart-3/20', dot: 'bg-chart-3', bar: 'bg-chart-3' },
+  { badge: 'bg-chart-4/10 text-chart-4 border-chart-4/20', dot: 'bg-chart-4', bar: 'bg-chart-4' }
+]
+
+function getSpeakerColors(name: string) {
+  const match = name.match(/(\d+)$/)
+  const index = match ? (parseInt(match[1]) - 1) % SPEAKER_COLOR_PALETTE.length : 0
+  return SPEAKER_COLOR_PALETTE[index] ?? SPEAKER_COLOR_PALETTE[0]
 }
 
 interface TranscriptSegmentProps {
@@ -41,7 +35,7 @@ export default function TranscriptSegment({
 }: TranscriptSegmentProps) {
   const [editing, setEditing] = React.useState(false)
   const [text, setText] = React.useState(seg.text)
-  const colors = SPEAKER_COLORS[seg.speaker] || SPEAKER_COLORS[speakerPanel.speakers[0].speaker]
+  const colors = getSpeakerColors(seg.name)
 
   const renderText = (content: string) => {
     if (!searchQuery) return content

@@ -49,6 +49,7 @@ export interface UseTranscriptEditorResult {
   // Actions
   handleTimeUpdate: (seconds: number) => void
   handleSegmentTextChange: (id: number, text: string) => void
+  renameSpeaker: (speakerId: string, newName: string) => void
   // Derived display values
   audioSrc: string | undefined
   fileName: string
@@ -105,16 +106,31 @@ export function useTranscriptEditor(
       setLoading(false)
       return
     }
-    const segs: SrtSegment[] = (record.segments ?? []).map((s) => ({
-      id: s.id,
-      startSeconds: s.start,
-      endSeconds: s.end,
-      time: secondsToDisplay(s.start),
-      endTime: secondsToDisplay(s.end),
-      text: s.text,
-      speaker: '',
-      name: ''
-    }))
+    const speakerOrder: string[] = []
+    const segs: SrtSegment[] = (record.segments ?? []).map((s) => {
+      const speakerId = s.speaker ?? ''
+      if (speakerId && !speakerOrder.includes(speakerId)) {
+        speakerOrder.push(speakerId)
+      }
+      const speakerIndex = speakerId ? speakerOrder.indexOf(speakerId) : -1
+      // If the stored speaker value is already a human-readable name (not a raw
+      // WhisperX SPEAKER_XX id), use it directly unless overridden in speakerNames.
+      const isRawId = /^SPEAKER_\d+$/i.test(speakerId)
+      const speakerName = isRawId
+        ? (record.speakerNames?.[speakerId] ??
+          (speakerIndex >= 0 ? `Speaker ${speakerIndex + 1}` : ''))
+        : (record.speakerNames?.[speakerId] ?? speakerId)
+      return {
+        id: s.id,
+        startSeconds: s.start,
+        endSeconds: s.end,
+        time: secondsToDisplay(s.start),
+        endTime: secondsToDisplay(s.end),
+        text: s.text,
+        speaker: speakerId,
+        name: speakerName
+      }
+    })
     setSegments(segs)
     if (segs.length > 0) setActiveSegment(segs[0].id)
     setLoading(false)
@@ -146,6 +162,11 @@ export function useTranscriptEditor(
 
   function handleSegmentTextChange(id: number, newText: string): void {
     setSegments((segs) => segs.map((s) => (s.id === id ? { ...s, text: newText } : s)))
+    markDirty()
+  }
+
+  function renameSpeaker(speakerId: string, newName: string): void {
+    setSegments((segs) => segs.map((s) => (s.speaker === speakerId ? { ...s, name: newName } : s)))
     markDirty()
   }
 
@@ -211,6 +232,7 @@ export function useTranscriptEditor(
     handleReplaceAll,
     handleTimeUpdate,
     handleSegmentTextChange,
+    renameSpeaker,
     audioSrc: record?.sourceFilePath,
     fileName: record?.sourceFileName ?? captions.studio.header.title,
     modelDisplay: record?.model ?? captions.studio.header.model,

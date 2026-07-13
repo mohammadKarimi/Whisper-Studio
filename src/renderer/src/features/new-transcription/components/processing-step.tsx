@@ -107,10 +107,8 @@ export default function Processing({
   const [message, setMessage] = useState<string>(captions.processing.status.inProgress)
   const [error, setError] = useState<string | null>(null)
   const [completedRecord, setCompletedRecord] = useState<TranscriptionRecord | null>(null)
-  const [commands, setCommands] = useState<string[]>([])
   const [logs, setLogs] = useState<string[]>([])
   const [logsOpen, setLogsOpen] = useState(false)
-  const [commandsOpen, setCommandsOpen] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const { navigateTo } = useAppRoute()
   const { setRecord } = useStudioContext()
@@ -153,12 +151,6 @@ export default function Processing({
         [...current, formatLogLine(update.phase, update.message)].filter(Boolean).slice(-40)
       )
 
-      if (update.phase === 'sending-command') {
-        setCommands((current) =>
-          current.includes(update.message) ? current : [...current, update.message]
-        )
-      }
-
       if (update.phase === 'transcribing' && !asrSeparatorAdded.current) {
         asrSeparatorAdded.current = true
         setLogs((current) => [...current, ASR_LOG_SEPARATOR])
@@ -197,9 +189,7 @@ export default function Processing({
         }
 
         if (result.record) setCompletedRecord(result.record)
-        setCommands((current) =>
-          current.includes(result.command) ? current : [...current, result.command]
-        )
+
         setLogs((current) =>
           [
             ...current,
@@ -344,39 +334,6 @@ export default function Processing({
           })}
         </div>
       </div>
-
-      {/* Command Log — shown only once the whisper command is known */}
-      {commands.length > 0 && (
-        <div className="glass-panel rounded-2xl mb-3 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setCommandsOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-secondary/40 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {captions.processing.commandLogTitle}
-              </span>
-            </div>
-            <ChevronDown
-              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${commandsOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {commandsOpen && (
-            <div className="px-5 pb-4 pt-3 border-t border-border/40 space-y-1.5">
-              {commands.map((command, index) => (
-                <pre
-                  key={`${command}-${index}`}
-                  className="overflow-x-auto whitespace-pre-wrap break-words rounded-lg border border-border/50 bg-card/50 p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground"
-                >
-                  {command}
-                </pre>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Diagnostic Log */}
       <div className="glass-panel rounded-2xl mb-4 overflow-hidden">

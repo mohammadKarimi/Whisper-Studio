@@ -164,6 +164,7 @@ export interface Segment {
   start: number
   end: number
   text: string
+  speaker?: string
 }
 
 export interface TranscriptionRecord {
@@ -177,6 +178,7 @@ export interface TranscriptionRecord {
   outputDirectory: string
   outputFiles: WhisperOutputFile[]
   segments: Segment[]
+  speakerNames?: Record<string, string>
   durationSeconds: number | null
   createdAt: number
   editedAt?: number
