@@ -16,6 +16,7 @@ export function createScopedCache<T>(
 ): ScopedCache<T> {
   let cache: { checkedAt: number; value: T } | null = null
   let pendingRequest: Promise<T> | null = null
+  let generation = 0
 
   return {
     get(): Promise<T> {
@@ -24,23 +25,32 @@ export function createScopedCache<T>(
       }
 
       if (!pendingRequest) {
-        pendingRequest = fetcher().then(
+        const requestGeneration = generation
+        const request = fetcher().then(
           (value) => {
-            cache = { checkedAt: Date.now(), value }
-            pendingRequest = null
+            if (generation === requestGeneration) {
+              cache = { checkedAt: Date.now(), value }
+            }
+            if (pendingRequest === request) {
+              pendingRequest = null
+            }
             return value
           },
           (error: unknown) => {
-            pendingRequest = null
+            if (pendingRequest === request) {
+              pendingRequest = null
+            }
             throw error
           }
         )
+        pendingRequest = request
       }
 
       return pendingRequest
     },
 
     invalidate(): void {
+      generation += 1
       cache = null
       pendingRequest = null
     }
