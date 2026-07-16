@@ -3,11 +3,31 @@ import { Edit3, Check, Copy } from 'lucide-react'
 import type { SrtSegment } from '@/lib/srt-parser'
 
 const SPEAKER_COLOR_PALETTE = [
-  { badge: 'bg-primary/10 text-primary border-primary/20',   avatar: 'bg-primary/25 text-primary',   bar: 'bg-primary'   },
-  { badge: 'bg-chart-2/10 text-chart-2 border-chart-2/20',   avatar: 'bg-chart-2/25 text-chart-2',   bar: 'bg-chart-2'   },
-  { badge: 'bg-chart-3/10 text-chart-3 border-chart-3/20',   avatar: 'bg-chart-3/25 text-chart-3',   bar: 'bg-chart-3'   },
-  { badge: 'bg-chart-4/10 text-chart-4 border-chart-4/20',   avatar: 'bg-chart-4/25 text-chart-4',   bar: 'bg-chart-4'   },
-  { badge: 'bg-success/10 text-success border-success/20',   avatar: 'bg-success/25 text-success',   bar: 'bg-success'   },
+  {
+    badge: 'bg-primary/10 text-primary border-primary/20',
+    avatar: 'bg-primary/25 text-primary',
+    bar: 'bg-primary'
+  },
+  {
+    badge: 'bg-chart-2/10 text-chart-2 border-chart-2/20',
+    avatar: 'bg-chart-2/25 text-chart-2',
+    bar: 'bg-chart-2'
+  },
+  {
+    badge: 'bg-chart-3/10 text-chart-3 border-chart-3/20',
+    avatar: 'bg-chart-3/25 text-chart-3',
+    bar: 'bg-chart-3'
+  },
+  {
+    badge: 'bg-chart-4/10 text-chart-4 border-chart-4/20',
+    avatar: 'bg-chart-4/25 text-chart-4',
+    bar: 'bg-chart-4'
+  },
+  {
+    badge: 'bg-success/10 text-success border-success/20',
+    avatar: 'bg-success/25 text-success',
+    bar: 'bg-success'
+  }
 ]
 
 function getSpeakerColors(speakerId: string) {
