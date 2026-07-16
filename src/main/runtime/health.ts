@@ -6,8 +6,13 @@ import { getRuntimeFfmpegPath, getRuntimePythonPath } from './paths'
 function run(command: string, args: readonly string[], timeout = 30_000): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile(command, [...args], { timeout, windowsHide: true }, (error, stdout, stderr) => {
-      if (error) reject(new Error(`${stderr || stdout || error.message}`.trim()))
-      else resolve(`${stdout}${stderr}`.trim())
+      if (error) {
+        // Prefer actual Python output over the generic Node "Command failed: ..." message
+        const detail = stderr.trim() || stdout.trim()
+        reject(new Error(detail || error.message))
+      } else {
+        resolve(`${stdout}${stderr}`.trim())
+      }
     })
   })
 }
@@ -21,13 +26,33 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
     await Promise.all([chmod(python, 0o755), chmod(ffmpeg, 0o755)])
   }
 
+  // Always exit 0 so Node doesn't swallow stdout as "Command failed".
+  // We parse the JSON result ourselves and throw a human-readable error when
+  // CUDA is required but unavailable.
   const probe = [
-    'import json, torch, torchaudio, whisperx, ctranslate2',
+    'import sys, json, torch, torchaudio, whisperx, ctranslate2',
     `cuda_ok = torch.cuda.is_available() if ${JSON.stringify(artifact.accelerator)} == "cuda" else True`,
     'print(json.dumps({"ok": bool(cuda_ok), "torch": torch.__version__}))',
-    'raise SystemExit(0 if cuda_ok else 2)'
+    'sys.exit(0)'
   ].join('; ')
-  await run(python, ['-c', probe])
+
+  const raw = await run(python, ['-c', probe])
+  let result: { ok: boolean; torch: string }
+  try {
+    result = JSON.parse(raw) as { ok: boolean; torch: string }
+  } catch {
+    throw new Error(`Runtime check returned unexpected output: ${raw}`)
+  }
+
+  if (!result.ok) {
+    const minDriver = artifact.minimumNvidiaDriver ?? '570'
+    throw new Error(
+      `CUDA is not available on this machine. ` +
+        `Ensure your NVIDIA driver is version ${minDriver} or newer, ` +
+        `or switch to the CPU Runtime.`
+    )
+  }
+
   await run(ffmpeg, ['-version'], 10_000)
 }
 

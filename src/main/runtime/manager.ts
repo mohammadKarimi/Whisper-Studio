@@ -168,6 +168,7 @@ export async function installRuntime(
   installInProgress = true
   let archivePath = ''
   let stagingPath = ''
+  let extractionComplete = false
   try {
     emit({ phase: 'preparing', message: 'Selecting the best Runtime for this computer.' })
     const manifest = await loadRuntimeManifest()
@@ -195,11 +196,17 @@ export async function installRuntime(
     emit({ phase: 'extracting', message: 'Extracting Runtime files. it might take a few moments.' })
     await extract(archivePath, { dir: stagingPath })
 
+    // ZIP is fully extracted — delete it immediately to reclaim disk space
+    extractionComplete = true
+    await rm(archivePath, { force: true }).catch(() => undefined)
+    archivePath = ''
+
     emit({ phase: 'checking', message: 'Checking Python, WhisperX, Torch and FFmpeg.' })
     await checkRuntime(stagingPath, artifact)
     const installPath = getRuntimeInstallPath(artifact)
     await rm(installPath, { recursive: true, force: true })
     await rename(stagingPath, installPath)
+    stagingPath = '' // renamed — no longer at the staging path
     await mkdir(getRuntimesPath(), { recursive: true })
     await writeFile(
       getActiveRuntimeRecordPath(),
@@ -215,8 +222,14 @@ export async function installRuntime(
     installInProgress = false
     return { ok: false, status: await getRuntimeStatus(), stderr: message }
   } finally {
+    // Always clean up the ZIP if it is still present (failed before/during extraction)
     if (archivePath) await rm(archivePath, { force: true }).catch(() => undefined)
-    if (stagingPath) await rm(stagingPath, { recursive: true, force: true }).catch(() => undefined)
+    // Only remove staging if extraction never completed (partial / corrupt folder).
+    // When the health check fails the extracted files stay intact so the user can
+    // retry via "Activate Runtime" without re-downloading.
+    if (stagingPath && !extractionComplete) {
+      await rm(stagingPath, { recursive: true, force: true }).catch(() => undefined)
+    }
   }
 }
 
