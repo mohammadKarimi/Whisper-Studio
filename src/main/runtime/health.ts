@@ -57,8 +57,5 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
 }
 
 export async function checkRuntimeFiles(root: string): Promise<void> {
-  await Promise.all([
-    access(getRuntimePythonPath(root)),
-    access(getRuntimeFfmpegPath(root))
-  ])
+  await Promise.all([access(getRuntimePythonPath(root)), access(getRuntimeFfmpegPath(root))])
 }
