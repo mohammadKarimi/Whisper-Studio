@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Clock, Gauge, Hash, TrendingUp, User, Pencil, Check } from 'lucide-react'
+import { Clock, Gauge, Hash, TrendingUp, Pencil, Check } from 'lucide-react'
 import { captions } from '@/lib/strings'
 
 interface SpeakerInfo {
@@ -26,29 +26,33 @@ const DEFAULT_STATS = [
 ]
 
 const SPEAKER_BADGE_COLORS = [
-  'bg-chart-1/10 text-chart-1 border-chart-1/20',
   'bg-primary/10 text-primary border-primary/20',
   'bg-chart-2/10 text-chart-2 border-chart-2/20',
   'bg-chart-3/10 text-chart-3 border-chart-3/20',
-  'bg-chart-4/10 text-chart-4 border-chart-4/20'
+  'bg-chart-4/10 text-chart-4 border-chart-4/20',
+  'bg-success/10 text-success border-success/20'
 ]
+
+function getSpeakerBadgeColor(speakerId: string): string {
+  const match = speakerId.match(/(\d+)$/)
+  const index = match ? parseInt(match[1]) % SPEAKER_BADGE_COLORS.length : 0
+  return SPEAKER_BADGE_COLORS[index]
+}
 
 function SpeakerRow({
   speaker,
-  index,
   isActive,
   onSelect,
   onRename
 }: {
   speaker: SpeakerInfo
-  index: number
   isActive: boolean
   onSelect: () => void
   onRename?: (speakerId: string, newName: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(speaker.name)
-  const badgeColor = SPEAKER_BADGE_COLORS[index % SPEAKER_BADGE_COLORS.length]
+  const badgeColor = getSpeakerBadgeColor(speaker.speaker)
 
   function commitRename() {
     const trimmed = draft.trim()
@@ -68,9 +72,9 @@ function SpeakerRow({
     >
       <button onClick={onSelect} className="flex items-center gap-3 flex-1 min-w-0 text-left">
         <div
-          className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 ${badgeColor}`}
+          className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 text-[11px] font-bold ${badgeColor}`}
         >
-          <User className="w-3.5 h-3.5" />
+          {speaker.name.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           {editing ? (
@@ -146,11 +150,10 @@ export default function SpeakerPanel({
       </div>
       <div className="space-y-2">
         {speakers && speakers.length > 0 ? (
-          speakers.map((s, i) => (
+          speakers.map((s) => (
             <SpeakerRow
               key={s.speaker}
               speaker={s}
-              index={i}
               isActive={activeSpeaker === s.speaker}
               onSelect={() => onSelectSpeaker(activeSpeaker === s.speaker ? null : s.speaker)}
               onRename={onRename}
