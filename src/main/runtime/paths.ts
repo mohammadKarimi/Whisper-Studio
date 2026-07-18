@@ -12,6 +12,10 @@ export function getRuntimePythonPath(root: string): string {
     : join(root, 'python', 'bin', 'python3')
 }
 
+export function getRuntimePythonCommand(root: string): string {
+  return process.platform === 'win32' ? getRuntimePythonPath(root) : 'python3'
+}
+
 export function getRuntimeBinPath(root: string): string {
   return process.platform === 'win32'
     ? join(root, 'python', 'Scripts')

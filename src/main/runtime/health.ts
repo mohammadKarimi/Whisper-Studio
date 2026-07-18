@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process'
 import { access, chmod } from 'node:fs/promises'
 import type { RuntimeArtifact } from '../../shared/ipc'
-import { getRuntimeFfmpegPath, getRuntimePythonPath } from './paths'
+import { getRuntimeFfmpegPath, getRuntimePythonCommand, getRuntimePythonPath } from './paths'
 
 function run(command: string, args: readonly string[], timeout = 30_000): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,7 +44,10 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
     'sys.exit(0)'
   ].join('; ')
 
-  const raw = await run(python, ['-c', probe])
+  const pythonCmd = getRuntimePythonCommand(root)
+  const ffmpegCmd = process.platform === 'win32' ? ffmpeg : 'ffmpeg'
+
+  const raw = await run(pythonCmd, ['-c', probe])
   let result: { ok: boolean; torch: string }
   try {
     const jsonLine = raw.split(/\r?\n/).find((l) => l.trimStart().startsWith('{')) ?? raw
@@ -62,7 +65,7 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
     )
   }
 
-  await run(ffmpeg, ['-version'], 10_000)
+  await run(ffmpegCmd, ['-version'], 10_000)
 }
 
 export async function checkRuntimeFiles(root: string): Promise<void> {
