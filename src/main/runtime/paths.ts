@@ -9,7 +9,7 @@ export function getRuntimeInstallPath(artifact: RuntimeArtifact): string {
 export function getRuntimePythonPath(root: string): string {
   return process.platform === 'win32'
     ? join(root, 'python', 'python.exe')
-    : join(root, 'python', 'bin', 'python3')
+    : join(root, 'python', 'bin', 'python')
 }
 
 export function getRuntimePythonCommand(root: string): string {

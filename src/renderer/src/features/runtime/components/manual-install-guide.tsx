@@ -15,7 +15,7 @@ function joinPath(...parts: string[]): string {
 
 function shellEscapePath(p: string): string {
   if (!p || p.includes('\\')) return p
-  return p.replace(/ /g, '\\ ')
+  return p.split(' ').join(String.fromCharCode(92) + ' ')
 }
 
 function StepBadge({ n }: { n: number }) {
