@@ -150,6 +150,14 @@ async function downloadArtifact(
     }
   })
   await pipeline(Readable.fromWeb(response.body as never), meter, createWriteStream(destination))
+  emit({
+    downloadedBytes: totalBytes,
+    etaSeconds: 0,
+    message: 'Downloading Whisper Runtime',
+    phase: 'downloading',
+    speedBytesPerSec: 0,
+    totalBytes
+  })
   if (hash.digest('hex').toLowerCase() !== artifact.sha256.toLowerCase()) {
     throw new Error('Runtime checksum verification failed.')
   }
@@ -169,9 +177,11 @@ export async function installRuntime(
   let archivePath = ''
   let stagingPath = ''
   let extractionComplete = false
+  let keepStaging = false
+  let manifest: Awaited<ReturnType<typeof loadRuntimeManifest>> | undefined
   try {
     emit({ phase: 'preparing', message: 'Selecting the best Runtime for this computer.' })
-    const manifest = await loadRuntimeManifest()
+    manifest = await loadRuntimeManifest()
     const selection = await getSelection(manifest)
     const artifact = artifactId
       ? (selection.available.find((candidate) => candidate.id === artifactId) ?? null)
@@ -230,7 +240,7 @@ export async function installRuntime(
     const installPath = getRuntimeInstallPath(artifact)
     await rm(installPath, { recursive: true, force: true })
     await rename(stagingPath, installPath)
-    stagingPath = '' // renamed — no longer at the staging path
+    keepStaging = true // renamed — no longer at the staging path
     await mkdir(getRuntimesPath(), { recursive: true })
     await writeFile(
       getActiveRuntimeRecordPath(),
@@ -238,20 +248,15 @@ export async function installRuntime(
       'utf8'
     )
     emit({ phase: 'ready', message: 'Whisper Runtime is ready.' })
-    installInProgress = false
     return { ok: true, status: await getRuntimeStatus(manifest) }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Runtime installation failed.'
     emit({ phase: 'error', message })
-    installInProgress = false
-    return { ok: false, status: await getRuntimeStatus(), stderr: message }
+    return { ok: false, status: await getRuntimeStatus(manifest), stderr: message }
   } finally {
-    // Always clean up the ZIP if it is still present (failed before/during extraction)
+    installInProgress = false
     if (archivePath) await rm(archivePath, { force: true }).catch(() => undefined)
-    // Only remove staging if extraction never completed (partial / corrupt folder).
-    // When the health check fails the extracted files stay intact so the user can
-    // retry via "Activate Runtime" without re-downloading.
-    if (stagingPath && !extractionComplete) {
+    if (stagingPath && !keepStaging && !extractionComplete) {
       await rm(stagingPath, { recursive: true, force: true }).catch(() => undefined)
     }
   }

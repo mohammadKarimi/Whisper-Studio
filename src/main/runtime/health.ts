@@ -35,13 +35,6 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
 
   await removeQuarantine(root)
 
-  // Always exit 0 so Node doesn't swallow stdout as "Command failed".
-  // We parse the JSON result ourselves and throw a human-readable error when
-  // CUDA is required but unavailable.
-  // For CPU builds we never reference torch.cuda at all — on Windows, ctranslate2
-  // can trigger a CUDA DLL-load failure even in CPU mode if the probe string
-  // mentions torch.cuda, because the ternary branch is compiled into bytecode
-  // even when it is never executed at runtime.
   const cudaCheck =
     artifact.accelerator === 'cuda' ? 'cuda_ok = torch.cuda.is_available()' : 'cuda_ok = True'
   const probe = [
