@@ -20,7 +20,7 @@ import {
   getRuntimesPath,
   getRuntimeStagingPath
 } from '../paths'
-import { checkRuntime, checkRuntimeFiles } from './health'
+import { checkRuntime, checkRuntimeFiles, removeQuarantine } from './health'
 import { loadRuntimeManifest } from './manifest'
 import { getRuntimeInstallPath, getRuntimePythonPath, getRuntimeFfmpegPath } from './paths'
 import {
@@ -283,6 +283,7 @@ export async function activateManualRuntime(artifactId: string): Promise<Runtime
     }
   }
 
+  await removeQuarantine(root)
   await mkdir(getRuntimesPath(), { recursive: true })
   await writeFile(
     getActiveRuntimeRecordPath(),

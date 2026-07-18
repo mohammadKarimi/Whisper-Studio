@@ -17,6 +17,13 @@ function run(command: string, args: readonly string[], timeout = 30_000): Promis
   })
 }
 
+export function removeQuarantine(directory: string): Promise<void> {
+  if (process.platform !== 'darwin') return Promise.resolve()
+  return new Promise<void>((resolve) => {
+    execFile('xattr', ['-r', '-d', 'com.apple.quarantine', directory], () => resolve())
+  })
+}
+
 export async function checkRuntime(root: string, artifact: RuntimeArtifact): Promise<void> {
   const python = getRuntimePythonPath(root)
   const ffmpeg = getRuntimeFfmpegPath(root)
@@ -25,6 +32,8 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
   if (process.platform !== 'win32') {
     await Promise.all([chmod(python, 0o755), chmod(ffmpeg, 0o755)])
   }
+
+  await removeQuarantine(root)
 
   // Always exit 0 so Node doesn't swallow stdout as "Command failed".
   // We parse the JSON result ourselves and throw a human-readable error when
