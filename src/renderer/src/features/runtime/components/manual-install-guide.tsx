@@ -13,6 +13,11 @@ function joinPath(...parts: string[]): string {
   return parts.join(sep)
 }
 
+function shellEscapePath(p: string): string {
+  if (!p || p.includes('\\')) return p
+  return p.replace(/ /g, '\\ ')
+}
+
 function StepBadge({ n }: { n: number }) {
   return (
     <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
@@ -38,7 +43,7 @@ export function ManualInstallGuide({
   const [copiedFolder, setCopiedFolder] = useState(false)
 
   const artifact = status.recommended ?? status.available[0] ?? null
-  const folder = userDataPath ? joinPath(userDataPath, 'runtimes') : '…'
+  const folder = userDataPath ? shellEscapePath(joinPath(userDataPath, 'runtimes')) : '…'
 
   const copy = (text: string, setCopied: (v: boolean) => void): void => {
     void navigator.clipboard.writeText(text).then(() => {
