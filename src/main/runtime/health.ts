@@ -36,7 +36,9 @@ export async function checkRuntime(root: string, artifact: RuntimeArtifact): Pro
   const cudaCheck =
     artifact.accelerator === 'cuda' ? 'cuda_ok = torch.cuda.is_available()' : 'cuda_ok = True'
   const probe = [
-    'import sys, json, torch, torchaudio, whisperx, ctranslate2',
+    'import sys, json, logging',
+    'logging.disable(logging.CRITICAL)',
+    'import torch, torchaudio, whisperx, ctranslate2',
     cudaCheck,
     'print(json.dumps({"ok": bool(cuda_ok), "torch": torch.__version__}))',
     'sys.exit(0)'
