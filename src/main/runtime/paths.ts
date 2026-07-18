@@ -13,7 +13,7 @@ export function getRuntimePythonPath(root: string): string {
 }
 
 export function getRuntimePythonCommand(root: string): string {
-  return process.platform === 'win32' ? getRuntimePythonPath(root) : 'python3'
+  return getRuntimePythonPath(root)
 }
 
 export function getRuntimeBinPath(root: string): string {
