@@ -1,7 +1,7 @@
 import { delimiter, dirname, join } from 'node:path'
-import { WHISPER_LANGUAGE_CODES } from '../../shared/constants'
-import { getRuntimeBinPath } from '../runtime/paths'
-import { getRuntimePythonPath } from '../runtime/paths'
+import { WHISPER_LANGUAGE_CODES } from '../../../shared/constants'
+import { getRuntimeBinPath } from '../../runtime/paths'
+import { getRuntimePythonPath } from '../../runtime/paths'
 
 export function getPythonEnv(runtimeRoot: string): NodeJS.ProcessEnv {
   const runtimeBin = getRuntimeBinPath(runtimeRoot)

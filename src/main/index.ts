@@ -2,8 +2,7 @@ import { app, BrowserWindow, ipcMain, net, protocol, shell } from 'electron'
 import { open, stat } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { registerSystemHandlers } from './ipc/system-registration'
-import { registerWhisperHandlers } from './ipc/asr/index'
+import { registerAllHandlers } from './ipc'
 import { IPC_CHANNELS } from '../shared/ipc'
 
 // Register a safe protocol for serving local media files from the renderer
@@ -171,8 +170,7 @@ app.whenReady().then(() => {
     })
   })
 
-  registerSystemHandlers(() => mainWindow)
-  registerWhisperHandlers()
+  registerAllHandlers(() => mainWindow)
 
   mainWindow = createMainWindow()
 
