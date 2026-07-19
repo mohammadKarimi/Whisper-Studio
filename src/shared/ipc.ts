@@ -180,10 +180,6 @@ export interface WhisperTranscriptionRequest {
   initialPrompt?: string
   language: string
   model: string
-  noiseReduction: boolean
-  removeSilence: boolean
-  translate: boolean
-  wordTimestamps: boolean
 }
 
 export interface WhisperOutputFile {

@@ -332,11 +332,7 @@ export const captions = {
       initialPrompt: '',
       hotwords: '',
       compute: 'cpu',
-      wordTimestamps: false,
-      diarization: false,
-      translate: false,
-      removeSilence: false,
-      noiseReduction: false
+      diarization: false
     },
     initialOutputFormats: ['srt', 'txt', 'vtt', 'json', 'tsv'],
     initialExportMode: 'single',
@@ -424,10 +420,6 @@ export const captions = {
           label: 'Speaker Diarization',
           description: "Identify who's speaking",
           tooltip: 'Automatically labels different speakers. Works best with 2–6 speakers.'
-        },
-        translate: {
-          label: 'Translate to English',
-          description: 'Translate non-English audio to English'
         }
       }
     },

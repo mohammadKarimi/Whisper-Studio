@@ -27,10 +27,6 @@ export interface TranscriptionSettings {
   initialPrompt: string
   language: string
   model: string
-  noiseReduction: boolean
-  removeSilence: boolean
-  translate: boolean
-  wordTimestamps: boolean
 }
 
 interface SettingRowProps {

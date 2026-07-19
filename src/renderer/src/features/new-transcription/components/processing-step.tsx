@@ -179,11 +179,7 @@ export default function Processing({
         hotwords: settings.hotwords.trim() || undefined,
         initialPrompt: settings.initialPrompt.trim() || undefined,
         language: settings.language,
-        model: settings.model,
-        noiseReduction: settings.noiseReduction,
-        removeSilence: settings.removeSilence,
-        translate: settings.translate,
-        wordTimestamps: settings.wordTimestamps
+        model: settings.model
       })
       .then((result) => {
         if (!isActive) {
