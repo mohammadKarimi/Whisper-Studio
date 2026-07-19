@@ -31,8 +31,8 @@
       "format": "zip",
       "id": "whisper-runtime-darwin-arm64-cpu-1.0.0",
       "platform": "darwin",
-      "sha256": "183e7db37d163d5ee0aa0ad0aa95c12732d2df43ff3ef891725ea093ab02676f",
-      "sizeBytes": 28501090,
+      "sha256": "d49a58bf21916f79b67293369071a96b31098fafd5ce247ec499d3e935a93c19",
+      "sizeBytes": 417427936,
       "url": "https://huggingface.co/buckets/WhisperStudio/whisper-runtime/resolve/whisper-runtime-darwin-arm64-cpu-1.0.0.zip",
       "version": "1.0.0"
     }
