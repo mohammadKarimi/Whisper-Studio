@@ -19,7 +19,6 @@ export function registerRecordHandlers(): void {
       try {
         const raw = await readFile(metaPath, 'utf8')
         const rec = JSON.parse(raw) as TranscriptionRecord
-        // Backfill segments for records created before segment embedding was added
         if (!rec.segments || rec.segments.length === 0) {
           const parseResult = await parseWhisperJson(
             join(exportsDir, entry.name),
