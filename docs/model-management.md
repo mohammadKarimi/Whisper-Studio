@@ -6,11 +6,11 @@ This document covers where Whisper models are stored and how the download pipeli
 
 Models are stored inside the app's `userData` directory, isolated from the user's global HuggingFace cache.
 
-| OS | Path |
-|---|---|
-| **Windows** | `%APPDATA%\Whisper Studio\models\` |
-| **macOS** | `~/Library/Application Support/Whisper Studio/models/` |
-| **Linux** | `~/.config/Whisper Studio/models/` |
+| OS          | Path                                                   |
+| ----------- | ------------------------------------------------------ |
+| **Windows** | `%APPDATA%\Whisper Studio\models\`                     |
+| **macOS**   | `~/Library/Application Support/Whisper Studio/models/` |
+| **Linux**   | `~/.config/Whisper Studio/models/`                     |
 
 > Override by setting the `HF_HUB_CACHE` environment variable before launching the app.
 
@@ -111,7 +111,7 @@ While the download runs, a 750 ms interval reads the size of `{modelDir}/blobs/`
 
 ```ts
 {
-  repoId: string          // model ID (e.g. "large-v2")
+  repoId: string // model ID (e.g. "large-v2")
   downloadedBytes: number // running total from blobs/
   state: 'active' | 'complete' | 'error'
 }
