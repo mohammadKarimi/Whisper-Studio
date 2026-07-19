@@ -446,19 +446,27 @@ export default function ModelsCatalog({
                           <Loader2 className="w-3 h-3 animate-spin" />
                           {availableCaptions.actions.downloading}
                         </span>
-                        <span className="text-xs font-mono text-primary">
-                          {formatBytes(downloadedBytes)} / {entry.sizeLabel}
-                        </span>
+                        {progress?.state !== 'pending' && (
+                          <span className="text-xs font-mono text-primary">
+                            {formatBytes(downloadedBytes)} / {entry.sizeLabel}
+                          </span>
+                        )}
                       </div>
-                      <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full"
-                          style={{
-                            width: `${Math.max(progressPercent, downloadedBytes ? 4 : 0)}%`
-                          }}
-                        />
-                      </div>
-                      {speed > 0 && (
+                      {progress?.state === 'pending' ? (
+                        <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+                          <div className="h-full w-full bg-gradient-to-r from-primary/40 to-primary rounded-full animate-pulse" />
+                        </div>
+                      ) : (
+                        <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-chart-2 rounded-full"
+                            style={{
+                              width: `${Math.max(progressPercent, downloadedBytes ? 4 : 0)}%`
+                            }}
+                          />
+                        </div>
+                      )}
+                      {progress?.state !== 'pending' && speed > 0 && (
                         <div className="flex items-center justify-between mt-1.5 text-[11px] font-mono text-muted-foreground">
                           <span>{formatBytes(speed)}/s</span>
                           {etaSeconds > 0 && (

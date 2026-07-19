@@ -10,7 +10,10 @@ import {
 import {
   MODEL_FETCHING_CACHE_DURATION_MS,
   WHISPER_DOWNLOADABLE_IDS,
-  WHISPER_KNOWN_MODELS
+  WHISPER_KNOWN_MODELS,
+  WHISPER_MODEL_REPO_OVERRIDES,
+  getWhisperModelHfRepo,
+  hfRepoToCacheDirName
 } from '../../../shared/constants'
 import { createScopedCache } from '../../cache'
 import { Dirent } from 'original-fs'
@@ -104,14 +107,15 @@ export async function downloadModel(
   const python = await resolvePython(modelId)
   if (!isPythonInfo(python)) return python
 
-  const { cacheDir, modelDir } = resolvePaths(modelId)
+  const hfRepo = getWhisperModelHfRepo(modelId)
+  const { cacheDir, modelDir } = resolvePaths(modelId, hfRepo)
 
   const progress = createProgressController(modelId, modelDir, emitProgress)
-  await progress.emitCurrent()
+  await progress.emitCurrent('pending')
   progress.start()
 
   try {
-    const result = await executeDownload(python, modelId, cacheDir)
+    const result = await executeDownload(python, hfRepo, cacheDir)
     downloadedModelsCache.invalidate()
     await progress.emitCurrent(result.exitCode === 0 ? 'complete' : 'error')
 
@@ -156,9 +160,10 @@ function isPythonInfo(value: PythonInfo | WhisperModelActionResult): value is Py
 }
 
 // Step 3: Derive all filesystem paths needed by the pipeline.
-function resolvePaths(modelId: string): { cacheDir: string; modelDir: string } {
+function resolvePaths(modelId: string, hfRepo: string): { cacheDir: string; modelDir: string } {
+  void modelId
   const cacheDir = getWhisperCacheDir()
-  const modelDir = join(cacheDir, `models--Systran--faster-whisper-${modelId}`)
+  const modelDir = join(cacheDir, hfRepoToCacheDirName(hfRepo))
   return { cacheDir, modelDir }
 }
 
@@ -173,6 +178,7 @@ function createProgressController(
   stop: () => void
 } {
   let intervalId: ReturnType<typeof setInterval> | undefined
+  let seenBytes = false
 
   const getDownloadedBytes = async (): Promise<number> => {
     // faster-whisper stores actual data in the blobs/ subdirectory;
@@ -192,13 +198,14 @@ function createProgressController(
     }
   }
 
-  const emitCurrent = async (
-    state: WhisperModelDownloadProgress['state'] = 'active'
-  ): Promise<void> => {
+  const emitCurrent = async (state?: WhisperModelDownloadProgress['state']): Promise<void> => {
+    const downloadedBytes = await getDownloadedBytes()
+    if (downloadedBytes > 0) seenBytes = true
+    const resolvedState = state ?? (seenBytes ? 'active' : 'pending')
     emitProgress?.({
-      downloadedBytes: await getDownloadedBytes(),
+      downloadedBytes,
       repoId: modelId,
-      state
+      state: resolvedState
     })
   }
 
@@ -221,10 +228,10 @@ function createProgressController(
 // Step 6+7: Run the Python download script; retries once after fixing certs.
 async function executeDownload(
   python: PythonInfo,
-  modelId: string,
+  hfRepo: string,
   cacheDir: string
 ): Promise<CommandResult> {
-  const code = buildDownloadScript(modelId, cacheDir)
+  const code = buildDownloadScript(hfRepo, cacheDir)
   let result = await runCommand(python.command, [...python.prefixArgs, '-c', code])
 
   if (result.exitCode !== 0 && isCertificateError(result.stderr)) {
@@ -268,24 +275,28 @@ function getWhisperCacheDir(): string {
   return process.env.HF_HUB_CACHE ?? join(homedir(), '.cache', 'huggingface', 'hub')
 }
 
-function buildDownloadScript(modelId: string, cacheDir: string): string {
+function buildDownloadScript(hfRepo: string, cacheDir: string): string {
   return [
-    'import json, logging',
+    'import json, logging, os',
     'logging.disable(logging.CRITICAL)',
+    'os.environ["TQDM_DISABLE"] = "1"',
     'try:',
     '    import truststore',
     '    truststore.inject_into_ssl()',
     'except Exception:',
     '    try:',
-    '        import os, certifi',
+    '        import certifi',
     '        os.environ.setdefault("SSL_CERT_FILE", certifi.where())',
     '    except Exception:',
     '        pass',
-    'from faster_whisper import WhisperModel',
-    `WhisperModel(${JSON.stringify(modelId)}, device='cpu', compute_type='int8', download_root=${JSON.stringify(cacheDir)})`,
+    'from huggingface_hub import snapshot_download',
+    `snapshot_download(repo_id=${JSON.stringify(hfRepo)}, cache_dir=${JSON.stringify(cacheDir)})`,
     'print(json.dumps({"ok": True}))'
   ].join('\n')
 }
+
+// 100 MB — large models can emit substantial stderr (pip output, warnings).
+const MAX_BUFFER_BYTES = 100 * 1024 * 1024
 
 // Runs a short-lived process and returns normalized output.
 function runCommand(
@@ -297,7 +308,7 @@ function runCommand(
     execFile(
       command,
       [...args],
-      { timeout: timeoutMs, windowsHide: true },
+      { timeout: timeoutMs, windowsHide: true, maxBuffer: MAX_BUFFER_BYTES },
       (error, stdout, stderr) => {
         resolve({
           exitCode: resolveExitCode(error),
@@ -339,17 +350,31 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
     return { models: [], totalSizeBytes: 0 }
   }
 
-  const HF_DIR_PREFIX = 'models--Systran--faster-whisper-'
+  // Build a reverse map: HF cache dir name → { id, params, source repo }.
+  // Start with the default Systran pattern for all known models, then apply
+  // overrides so that non-Systran repos are matched under their real dir name.
+  const dirToModel = new Map<string, { id: string; params: string; source: string }>()
+  for (const [modelId, info] of Object.entries(WHISPER_KNOWN_MODELS)) {
+    const repo = `Systran/faster-whisper-${modelId}`
+    dirToModel.set(hfRepoToCacheDirName(repo), { id: modelId, params: info.params, source: repo })
+  }
+  for (const [modelId, hfRepo] of Object.entries(WHISPER_MODEL_REPO_OVERRIDES)) {
+    const info = WHISPER_KNOWN_MODELS[modelId]
+    dirToModel.set(hfRepoToCacheDirName(hfRepo), {
+      id: modelId,
+      params: info?.params ?? '-',
+      source: hfRepo
+    })
+  }
+
   const modelOrder = Object.keys(WHISPER_KNOWN_MODELS)
   const orderByModel = new Map(modelOrder.map((name, index) => [name, index]))
   const models: DownloadedWhisperModel[] = []
 
   for (const entry of entries) {
-    if (!entry.isDirectory() || !entry.name.startsWith(HF_DIR_PREFIX)) continue
-
-    const modelName = entry.name.slice(HF_DIR_PREFIX.length)
-    const info = WHISPER_KNOWN_MODELS[modelName]
-    if (!info) continue
+    if (!entry.isDirectory()) continue
+    const known = dirToModel.get(entry.name)
+    if (!known) continue
 
     const dirPath = join(cacheDir, entry.name)
     const dirStats = await stat(dirPath).catch(() => null)
@@ -370,14 +395,14 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
 
     models.push({
       downloadedAt: dirStats?.mtimeMs ?? 0,
-      id: modelName,
+      id: known.id,
       languages: '99',
-      name: modelName,
-      params: info.params ?? '-',
+      name: known.id,
+      params: known.params,
       path: dirPath,
       precision: 'int8',
       sizeBytes,
-      source: `Systran/faster-whisper-${modelName}`
+      source: known.source
     })
   }
 
@@ -396,7 +421,8 @@ async function scanDownloadedModels(): Promise<DownloadedWhisperModelsResult> {
 // Removes a downloaded model directory from the HuggingFace hub cache.
 export async function deleteModel(id: string): Promise<WhisperModelActionResult> {
   const cacheDir = getWhisperCacheDir()
-  const modelDir = join(cacheDir, `models--Systran--faster-whisper-${id}`)
+  const hfRepo = getWhisperModelHfRepo(id)
+  const modelDir = join(cacheDir, hfRepoToCacheDirName(hfRepo))
 
   try {
     await rm(modelDir, { recursive: true, force: true })

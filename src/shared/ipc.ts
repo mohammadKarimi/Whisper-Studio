@@ -140,7 +140,7 @@ export interface WhisperModelActionResult {
   stdout?: string
 }
 
-export type WhisperModelDownloadProgressState = 'active' | 'complete' | 'error'
+export type WhisperModelDownloadProgressState = 'pending' | 'active' | 'complete' | 'error'
 
 export interface WhisperModelDownloadProgress {
   downloadedBytes: number

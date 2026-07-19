@@ -234,6 +234,28 @@ export const WHISPER_CATALOG_MODELS = [
 export type WhisperCatalogModel = (typeof WHISPER_CATALOG_MODELS)[number]
 
 /**
+ * Models whose HuggingFace repo is NOT under the Systran organization.
+ * The download pipeline uses these overrides instead of the default
+ * `Systran/faster-whisper-{modelId}` pattern.
+ */
+export const WHISPER_MODEL_REPO_OVERRIDES: Readonly<Record<string, string>> = {
+  'large-v3-turbo': 'deepdml/faster-whisper-large-v3-turbo-ct2'
+}
+
+/** Returns the HuggingFace repo ID for a given model ID. */
+export function getWhisperModelHfRepo(modelId: string): string {
+  return WHISPER_MODEL_REPO_OVERRIDES[modelId] ?? `Systran/faster-whisper-${modelId}`
+}
+
+/**
+ * Converts a HuggingFace repo ID (e.g. "org/name") to the directory name
+ * the HF hub cache creates on disk (e.g. "models--org--name").
+ */
+export function hfRepoToCacheDirName(repoId: string): string {
+  return `models--${repoId.replace('/', '--')}`
+}
+
+/**
  * Lookup table used by the main-process cache scanner to enrich any .pt file
  * it finds in the Whisper cache directory (including English-only variants and
  * legacy model names that are not in the downloadable catalog).
