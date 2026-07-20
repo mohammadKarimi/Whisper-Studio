@@ -17,6 +17,28 @@ npm run runtime:build -- \
   --base-url https://github.com/mohammadKarimi/Whisper-Studio/releases/download/runtime-v1.0.0
 ```
 
+The builder downloads and embeds NLTK's `punkt_tab` tokenizer, which WhisperX uses during
+alignment. If Python downloads are blocked, download and extract the NLTK data separately and pass
+its root directory to the builder:
+
+```sh
+curl -fL \
+  https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt_tab.zip \
+  -o /tmp/punkt_tab.zip
+mkdir -p /tmp/whisper-runtime-nltk/tokenizers
+ditto -x -k /tmp/punkt_tab.zip /tmp/whisper-runtime-nltk/tokenizers
+
+npm run runtime:build -- \
+  --python-root /path/to/portable-python \
+  --ffmpeg-dir /path/to/ffmpeg/bin \
+  --nltk-data-dir /tmp/whisper-runtime-nltk \
+  --accelerator cpu \
+  --version 1.0.0
+```
+
+The build fails before packaging unless the Python imports succeed and the English sentence
+tokenizer can be loaded entirely from the Runtime.
+
 Use `--accelerator cuda` on Windows or Linux to build the CUDA 12.8/PyTorch artifact. Build CPU and
 CUDA independently because their PyTorch wheels and native libraries differ.
 CUDA artifacts record NVIDIA's CUDA 12.8 GA minimum driver by default (`570.65` on Windows and

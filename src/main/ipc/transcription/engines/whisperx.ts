@@ -17,10 +17,7 @@ import type {
 } from './types'
 import { getPythonEnv, getTimestamp, normalizeLanguage, sanitizeFileName } from '../../shared/utils'
 
-function buildArgs(
-  request: WhisperTranscriptionRequest,
-  outputDir: string
-): string[] {
+function buildArgs(request: WhisperTranscriptionRequest, outputDir: string): string[] {
   const isCuda = request.compute === 'gpu'
   const device = isCuda ? 'cuda' : 'cpu'
   const language = normalizeLanguage(request.language)
@@ -35,7 +32,9 @@ function buildArgs(
     '--output_dir',
     outputDir,
     '--device',
-    device
+    device,
+    '--compute_type',
+    isCuda ? 'float16' : 'int8'
   ]
 
   if (language) {
