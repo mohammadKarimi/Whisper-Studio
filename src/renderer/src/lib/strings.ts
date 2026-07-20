@@ -232,7 +232,9 @@ export const captions = {
         deleting: 'Deleting...',
         confirmDelete: 'Delete?',
         confirm: 'Delete',
-        cancel: 'Cancel'
+        cancel: 'Cancel',
+        deleteTitle: 'Delete model',
+        deleteDescription: 'This will permanently remove'
       }
     },
     available: {

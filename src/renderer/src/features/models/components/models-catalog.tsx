@@ -117,7 +117,7 @@ export default function ModelsCatalog({
   const [filter, setFilter] = useState<FilterKey>('all')
   const [downloadingRepos, setDownloadingRepos] = useState<Set<string>>(() => new Set())
   const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set())
-  const [confirmingKey, setConfirmingKey] = useState<string | null>(null)
+  const [confirmingEntry, setConfirmingEntry] = useState<CatalogEntry | null>(null)
   const [errorByKey, setErrorByKey] = useState<Record<string, string>>({})
   const [speedByRepo, setSpeedByRepo] = useState<Record<string, number>>({})
   // Tracks the last reported byte count and timestamp per download so we can
@@ -255,7 +255,7 @@ export default function ModelsCatalog({
 
     const { id } = entry.installed
 
-    setConfirmingKey(null)
+    setConfirmingEntry(null)
     setDeletingIds((prev) => new Set([...prev, id]))
     clearError(entry.key)
 
@@ -290,6 +290,53 @@ export default function ModelsCatalog({
 
   return (
     <div>
+      {confirmingEntry && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
+          onClick={() => setConfirmingEntry(null)}
+        >
+          <div
+            className="glass-panel w-full max-w-sm rounded-2xl border border-border/60 bg-card p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+              <Trash2 className="h-5 w-5 text-destructive" />
+            </div>
+            <h3 className="mb-1 text-sm font-semibold text-foreground">
+              {downloadedCaptions.actions.deleteTitle}
+            </h3>
+            <p className="mb-6 text-xs text-muted-foreground">
+              {downloadedCaptions.actions.deleteDescription}{' '}
+              <span className="font-mono font-medium text-foreground">{confirmingEntry.name}</span>?
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmingEntry(null)}
+                disabled={confirmingEntry.installed ? deletingIds.has(confirmingEntry.installed.id) : false}
+                className="text-xs"
+              >
+                {downloadedCaptions.actions.cancel}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => void handleDelete(confirmingEntry)}
+                disabled={confirmingEntry.installed ? deletingIds.has(confirmingEntry.installed.id) : false}
+                className="gap-1.5 text-xs"
+              >
+                {confirmingEntry.installed && deletingIds.has(confirmingEntry.installed.id) ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                {downloadedCaptions.actions.confirm}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mb-4">
         <h2 className="text-sm font-semibold text-foreground">{catalogCaptions.title}</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -484,39 +531,12 @@ export default function ModelsCatalog({
                           ? `${catalogCaptions.addedPrefix} ${formatDownloadedDate(entry.installed.downloadedAt)}`
                           : ''}
                       </span>
-                      {confirmingKey === entry.key ? (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => void handleDelete(entry)}
-                            disabled={isDeleting}
-                            className="h-8 gap-1.5 text-xs"
-                          >
-                            {isDeleting ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-3.5 h-3.5" />
-                            )}
-                            {downloadedCaptions.actions.confirm}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setConfirmingKey(null)}
-                            disabled={isDeleting}
-                            className="h-8 text-xs text-muted-foreground"
-                          >
-                            {downloadedCaptions.actions.cancel}
-                          </Button>
-                        </div>
-                      ) : (
-                        <Tooltip>
+                      <Tooltip>
                           <TooltipTrigger>
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => setConfirmingKey(entry.key)}
+                              onClick={() => setConfirmingEntry(entry)}
                               disabled={isDeleting}
                               title={downloadedCaptions.actions.delete}
                               aria-label={downloadedCaptions.actions.delete}
@@ -531,7 +551,6 @@ export default function ModelsCatalog({
                           </TooltipTrigger>
                           <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
                         </Tooltip>
-                      )}
                     </div>
                   ) : (
                     <Button
