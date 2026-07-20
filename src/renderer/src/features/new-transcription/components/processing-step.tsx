@@ -48,7 +48,6 @@ function formatLogLine(source: string, text: string): string {
 interface ProcessingProps {
   desktop: TranscriptionApi
   file: TranscriptionFile | null
-  outputFormats: string[]
   settings: TranscriptionSettings
 }
 
@@ -96,12 +95,7 @@ function StageItem({ stage, isDone, isActive }: StageItemProps): JSX.Element {
   )
 }
 
-export default function Processing({
-  desktop,
-  file,
-  outputFormats,
-  settings
-}: ProcessingProps): JSX.Element {
+export default function Processing({ desktop, file, settings }: ProcessingProps): JSX.Element {
   const [progress, setProgress] = useState(0)
   const [currentStage, setCurrentStage] = useState(0)
   const [message, setMessage] = useState<string>(captions.processing.status.inProgress)
@@ -135,8 +129,7 @@ export default function Processing({
       formatLogLine('client', captions.processing.logs.starting),
       formatLogLine('client', `${captions.processing.logs.filePath}: ${file.path}`),
       formatLogLine('client', `${captions.processing.logs.model}: ${settings.model}`),
-      formatLogLine('client', `${captions.processing.logs.compute}: ${settings.compute}`),
-      formatLogLine('client', `${captions.processing.logs.formats}: ${outputFormats.join(', ')}`)
+      formatLogLine('client', `${captions.processing.logs.compute}: ${settings.compute}`)
     ])
 
     const removeProgressListener = desktop.onWhisperProgress((update) => {
@@ -175,7 +168,7 @@ export default function Processing({
         compute: settings.compute,
         diarization: settings.diarization,
         filePath: file.path,
-        formats: outputFormats,
+        formats: [],
         hotwords: settings.hotwords.trim() || undefined,
         initialPrompt: settings.initialPrompt.trim() || undefined,
         language: settings.language,
@@ -228,7 +221,7 @@ export default function Processing({
       removeProgressListener()
       removeOutputListener()
     }
-  }, [desktop, file, outputFormats, settings])
+  }, [desktop, file, settings])
 
   // Auto-scroll logs to bottom when new entries arrive
   useEffect(() => {

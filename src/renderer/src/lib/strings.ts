@@ -178,7 +178,7 @@ export const captions = {
     header: {
       eyebrow: 'Model Manager',
       title: 'Whisper Models',
-      subtitle: 'Download and manage OpenAI Whisper transcription models',
+      subtitle: 'Download and manage Whisper transcription models',
       storageLabel: 'Storage',
       modelsLabel: 'Models',
       emptyStorageValue: '0 B',
@@ -195,7 +195,7 @@ export const captions = {
     },
     catalog: {
       title: 'Models',
-      subtitle: 'Browse, download, and manage OpenAI Whisper models',
+      subtitle: 'Browse, download, and manage Whisper models',
       installedBadge: 'Installed',
       addedPrefix: 'Added',
       filter: {
@@ -232,12 +232,14 @@ export const captions = {
         deleting: 'Deleting...',
         confirmDelete: 'Delete?',
         confirm: 'Delete',
-        cancel: 'Cancel'
+        cancel: 'Cancel',
+        deleteTitle: 'Delete model',
+        deleteDescription: 'This will permanently remove'
       }
     },
     available: {
       title: 'Available Models',
-      subtitle: 'Download OpenAI Whisper models',
+      subtitle: 'Download Whisper models',
       recommended: 'Recommended',
       languageCount: '99',
       progressSuffix: '%',
@@ -334,13 +336,11 @@ export const captions = {
       compute: 'cpu',
       diarization: false
     },
-    initialOutputFormats: ['srt', 'txt', 'vtt', 'json', 'tsv'],
     initialExportMode: 'single',
     steps: [
       { id: 1, label: 'Select Files', description: 'Choose audio or video files' },
       { id: 2, label: 'Settings', description: 'Configure transcription' },
-      { id: 3, label: 'Output', description: 'Format & export options' },
-      { id: 4, label: 'Processing', description: 'Transcribe selected files' }
+      { id: 3, label: 'Processing', description: 'Transcribe selected files' }
     ],
     navigation: {
       back: 'Back',
@@ -366,13 +366,12 @@ export const captions = {
     settings: {
       recommendedBanner: {
         emphasis: 'CPU mode is selected by default.',
-        detail: 'Choose one of your downloaded OpenAI Whisper models before starting transcription.'
+        detail: 'Choose one of your downloaded Whisper models before starting transcription.'
       },
       recommendedBadge: 'Recommended',
       noDownloadedModelsAlert:
         'No downloaded models were found. Download a model before starting transcription.',
-      noDownloadedModelsTooltip:
-        'Go to Whisper Models Page and download an OpenAI Whisper model first.',
+      noDownloadedModelsTooltip: 'Go to Whisper Models Page and download an Whisper model first.',
       modelPlaceholder: 'Select a model',
       goToModels: 'Go to Models',
       languageSearchPlaceholder: 'Search language...',

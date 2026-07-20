@@ -29,7 +29,7 @@ If applicable, paste relevant console output or attach screenshots.
 | OS                     | e.g. Windows 11, macOS 14  |
 | Whisper Studio version | e.g. 0.1.0                 |
 | Python version         | e.g. 3.11.4                |
-| openai-whisper version | e.g. 20231117              |
+| whisper version        | e.g. 20231117              |
 | GPU / compute mode     | e.g. CPU / NVIDIA RTX 3080 |
 
 ## Additional context

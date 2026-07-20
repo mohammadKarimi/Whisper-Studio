@@ -47,7 +47,7 @@ export function SplashScreen({ ready, version }: SplashScreenProps): JSX.Element
     >
       <BrandedBackdrop />
       <div className="relative flex flex-col items-center gap-4 px-8 text-center">
-        <img src={logoUrl} className="relative size-24" alt="" />
+        <img src={logoUrl} className="size-24" alt="" />
 
         <div className="space-y-1">
           <h1 className="text-lg font-semibold tracking-normal">Whisper Studio</h1>
