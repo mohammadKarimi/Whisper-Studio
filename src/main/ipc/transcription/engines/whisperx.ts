@@ -19,8 +19,7 @@ import { getPythonEnv, getTimestamp, normalizeLanguage, sanitizeFileName } from 
 
 function buildArgs(
   request: WhisperTranscriptionRequest,
-  outputDir: string,
-  hfToken: string | null
+  outputDir: string
 ): string[] {
   const isCuda = request.compute === 'gpu'
   const device = isCuda ? 'cuda' : 'cpu'
@@ -53,8 +52,8 @@ function buildArgs(
     args.push('--hotwords', hotwords)
   }
 
-  if (request.diarization && hfToken) {
-    args.push('--diarize', '--hf_token', hfToken)
+  if (request.diarization) {
+    args.push('--diarize')
   }
 
   return args
@@ -101,7 +100,7 @@ async function runWhisperX(
     'ignore::UserWarning:pyannote',
     '-m',
     'whisperx',
-    ...buildArgs(request, outputDirectory, hfToken)
+    ...buildArgs(request, outputDirectory)
   ]
   const python = getRuntimePythonPath(runtime.root)
   const command = [python, ...args]
@@ -112,7 +111,7 @@ async function runWhisperX(
 
   return new Promise<Result<TranscriptionEngineResult, TranscriptionError>>((resolve) => {
     const child = spawn(python, args, {
-      env: getPythonEnv(runtime.root),
+      env: { ...getPythonEnv(runtime.root), ...(hfToken ? { HF_TOKEN: hfToken } : {}) },
       windowsHide: true
     })
 
