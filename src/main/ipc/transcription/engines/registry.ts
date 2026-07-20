@@ -6,7 +6,7 @@ import { whisperxEngine } from './whisperx'
 import type { TranscriptionEngine } from './types'
 
 const transcriptionEngines = {
-  'whisperx': whisperxEngine
+  whisperx: whisperxEngine
 } satisfies Record<TranscriptionEngineType, TranscriptionEngine>
 
 export function getTranscriptionEngine(

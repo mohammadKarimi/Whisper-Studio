@@ -44,7 +44,11 @@ export async function getSelection(manifest: RuntimeManifest): Promise<{
   available: RuntimeArtifact[]
   recommended: RuntimeArtifact | null
 }> {
-  const available = getCompatibleRuntimeArtifacts(manifest.artifacts, process.platform, process.arch)
+  const available = getCompatibleRuntimeArtifacts(
+    manifest.artifacts,
+    process.platform,
+    process.arch
+  )
   const driverVersion = await getNvidiaDriverVersion()
   const cuda = driverVersion
     ? selectRuntimeArtifact(manifest.artifacts, {

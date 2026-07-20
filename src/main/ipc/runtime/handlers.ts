@@ -8,7 +8,12 @@ import type {
 } from '../../../shared/ipc'
 import { IPC_CHANNELS } from '../../../shared/ipc'
 import { loadRuntimeManifest } from '../../runtime/manifest'
-import { getRuntimeStatus, installRuntime, removeRuntime, activateManualRuntime } from '../../runtime'
+import {
+  getRuntimeStatus,
+  installRuntime,
+  removeRuntime,
+  activateManualRuntime
+} from '../../runtime'
 import { getRuntimesPath } from '../../paths'
 
 export function registerRuntimeHandlers(): void {
