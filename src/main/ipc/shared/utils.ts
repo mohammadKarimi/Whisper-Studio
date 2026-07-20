@@ -13,7 +13,8 @@ export function getPythonEnv(runtimeRoot: string): NodeJS.ProcessEnv {
     PATH,
     PYTHONIOENCODING: 'utf-8',
     PYTHONUNBUFFERED: '1',
-    PYTHONUTF8: '1'
+    PYTHONUTF8: '1',
+    HF_HUB_DISABLE_XET: '1'
   }
 }
 

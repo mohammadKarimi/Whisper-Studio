@@ -100,7 +100,13 @@ async function runWhisperX(
     )
   }
 
-  const args = ['-m', 'whisperx', ...buildArgs(request, outputDirectory, hfToken)]
+  const args = [
+    '-W',
+    'ignore::UserWarning:pyannote',
+    '-m',
+    'whisperx',
+    ...buildArgs(request, outputDirectory, hfToken)
+  ]
   const python = getRuntimePythonPath(runtime.root)
   const command = [python, ...args]
     .map((argument) => (argument.includes(' ') ? `"${argument}"` : argument))

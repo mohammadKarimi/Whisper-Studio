@@ -239,7 +239,7 @@ export type WhisperCatalogModel = (typeof WHISPER_CATALOG_MODELS)[number]
  * `Systran/faster-whisper-{modelId}` pattern.
  */
 export const WHISPER_MODEL_REPO_OVERRIDES: Readonly<Record<string, string>> = {
-  'large-v3-turbo': 'deepdml/faster-whisper-large-v3-turbo-ct2'
+  'large-v3-turbo': 'mobiuslabsgmbh/faster-whisper-large-v3-turbo'
 }
 
 /** Returns the HuggingFace repo ID for a given model ID. */

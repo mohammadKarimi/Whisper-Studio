@@ -205,6 +205,7 @@ function buildDownloadScript(hfRepo: string, cacheDir: string): string {
     'import json, logging, os',
     'logging.disable(logging.CRITICAL)',
     'os.environ["TQDM_DISABLE"] = "1"',
+    'os.environ["HF_HUB_DISABLE_XET"] = "1"',
     'try:',
     '    import truststore',
     '    truststore.inject_into_ssl()',
