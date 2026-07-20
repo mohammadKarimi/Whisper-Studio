@@ -4,7 +4,7 @@ import { readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { IPC_CHANNELS, type TranscriptionRecord } from '../../../shared/ipc'
 import { parseWhisperJson } from '../../parser'
 import { getOutputDirectory } from '../../paths'
-import { readSettings } from './settings-handlers'
+import { readSettings } from '../app/settings-handlers'
 
 export function registerRecordHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.listTranscriptions, async (): Promise<TranscriptionRecord[]> => {

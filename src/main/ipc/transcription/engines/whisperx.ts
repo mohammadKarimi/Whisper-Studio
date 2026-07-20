@@ -9,13 +9,13 @@ import { parseWhisperJson } from '../../../parser'
 import { getOutputDirectory } from '../../../paths'
 import { getActiveRuntime } from '../../../runtime/manager'
 import { getRuntimePythonPath } from '../../../runtime/paths'
-import { readSettings } from '../../system/settings-handlers'
+import { readSettings } from '../../app/settings-handlers'
 import type {
   TranscriptionEngine,
   TranscriptionEngineContext,
   TranscriptionEngineResult
 } from './types'
-import { getPythonEnv, getTimestamp, normalizeLanguage, sanitizeFileName } from '../../utils'
+import { getPythonEnv, getTimestamp, normalizeLanguage, sanitizeFileName } from '../../shared/utils'
 
 function buildArgs(
   request: WhisperTranscriptionRequest,
@@ -100,7 +100,13 @@ async function runWhisperX(
     )
   }
 
-  const args = ['-m', 'whisperx', ...buildArgs(request, outputDirectory, hfToken)]
+  const args = [
+    '-W',
+    'ignore::UserWarning:pyannote',
+    '-m',
+    'whisperx',
+    ...buildArgs(request, outputDirectory, hfToken)
+  ]
   const python = getRuntimePythonPath(runtime.root)
   const command = [python, ...args]
     .map((argument) => (argument.includes(' ') ? `"${argument}"` : argument))

@@ -3,8 +3,8 @@
 
 import { execFile } from 'node:child_process'
 import { parseVersion } from './utils'
-import { getActiveRuntime } from '../runtime/manager'
-import { getRuntimePythonPath } from '../runtime/paths'
+import { getActiveRuntime } from '../../runtime/manager'
+import { getRuntimePythonPath } from '../../runtime/paths'
 
 export type CommandResult = {
   command: string

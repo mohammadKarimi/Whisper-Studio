@@ -1,4 +1,4 @@
-import { dialog, ipcMain, type IpcMainInvokeEvent } from 'electron'
+import { dialog, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { readFile, writeFile } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { FileSelection, IPC_CHANNELS } from '../../../shared/ipc'
@@ -41,5 +41,11 @@ export function registerFsHandlers(): void {
 
     const filePath = selection.filePaths[0]
     return { canceled: false, filePath, fileName: basename(filePath) }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.shellOpenExternal, async (_, url: string) => {
+    if (typeof url === 'string' && (url.startsWith('https://') || url.startsWith('mailto:'))) {
+      await shell.openExternal(url)
+    }
   })
 }
