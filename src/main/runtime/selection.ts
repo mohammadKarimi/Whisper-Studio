@@ -1,4 +1,5 @@
-import type { RuntimeAccelerator, RuntimeArtifact } from '../../shared/ipc'
+import type { RuntimeAccelerator, RuntimeArtifact, RuntimeManifest } from '../../shared/ipc'
+import { getNvidiaDriverVersion } from './hardware'
 
 export interface RuntimeTarget {
   accelerator: RuntimeAccelerator
@@ -37,4 +38,31 @@ export function getCompatibleRuntimeArtifacts(
   arch: NodeJS.Architecture
 ): RuntimeArtifact[] {
   return artifacts.filter((artifact) => artifact.platform === platform && artifact.arch === arch)
+}
+
+export async function getSelection(manifest: RuntimeManifest): Promise<{
+  available: RuntimeArtifact[]
+  recommended: RuntimeArtifact | null
+}> {
+  const available = getCompatibleRuntimeArtifacts(manifest.artifacts, process.platform, process.arch)
+  const driverVersion = await getNvidiaDriverVersion()
+  const cuda = driverVersion
+    ? selectRuntimeArtifact(manifest.artifacts, {
+        accelerator: 'cuda',
+        arch: process.arch,
+        platform: process.platform
+      })
+    : null
+  const cudaCompatible =
+    cuda &&
+    (!cuda.minimumNvidiaDriver ||
+      compareNumericVersions(driverVersion!, cuda.minimumNvidiaDriver) >= 0)
+  const recommended = cudaCompatible
+    ? cuda
+    : selectRuntimeArtifact(manifest.artifacts, {
+        accelerator: 'cpu',
+        arch: process.arch,
+        platform: process.platform
+      })
+  return { available, recommended }
 }

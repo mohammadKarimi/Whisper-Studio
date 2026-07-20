@@ -3,7 +3,7 @@
 
 import { execFile } from 'node:child_process'
 import { parseVersion } from './utils'
-import { getActiveRuntime } from '../../runtime/manager'
+import { getActiveRuntime } from '../../runtime'
 import { getRuntimePythonPath } from '../../runtime/paths'
 
 export type CommandResult = {

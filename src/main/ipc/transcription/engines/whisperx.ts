@@ -7,7 +7,7 @@ import { TranscriptionError } from '../../../../shared/errors'
 import { type Result, err, ok } from '../../../../shared/types'
 import { parseWhisperJson } from '../../../parser'
 import { getOutputDirectory } from '../../../paths'
-import { getActiveRuntime } from '../../../runtime/manager'
+import { getActiveRuntime } from '../../../runtime'
 import { getRuntimePythonPath } from '../../../runtime/paths'
 import { readSettings } from '../../app/settings-handlers'
 import type {
