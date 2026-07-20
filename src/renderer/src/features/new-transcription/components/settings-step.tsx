@@ -335,10 +335,18 @@ export default function StepSettings({
           <SettingRow
             icon={Cpu}
             label={settingRows.compute.label}
-            description={isCpuOnlyRuntime ? 'CPU-only runtime installed' : settingRows.compute.description}
-            tooltip={isCpuOnlyRuntime ? 'The installed runtime only supports CPU. Install a CUDA runtime to enable GPU.' : settingRows.compute.tooltip}
+            description={
+              isCpuOnlyRuntime ? 'CPU-only runtime installed' : settingRows.compute.description
+            }
+            tooltip={
+              isCpuOnlyRuntime
+                ? 'The installed runtime only supports CPU. Install a CUDA runtime to enable GPU.'
+                : settingRows.compute.tooltip
+            }
           >
-            <div className={`flex items-center gap-2 p-1 rounded-lg bg-secondary ${isCpuOnlyRuntime ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <div
+              className={`flex items-center gap-2 p-1 rounded-lg bg-secondary ${isCpuOnlyRuntime ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
               {captions.newTranscription.settings.computeModes.map((mode) => (
                 <button
                   key={mode.value}

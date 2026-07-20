@@ -95,11 +95,7 @@ function StageItem({ stage, isDone, isActive }: StageItemProps): JSX.Element {
   )
 }
 
-export default function Processing({
-  desktop,
-  file,
-  settings
-}: ProcessingProps): JSX.Element {
+export default function Processing({ desktop, file, settings }: ProcessingProps): JSX.Element {
   const [progress, setProgress] = useState(0)
   const [currentStage, setCurrentStage] = useState(0)
   const [message, setMessage] = useState<string>(captions.processing.status.inProgress)
