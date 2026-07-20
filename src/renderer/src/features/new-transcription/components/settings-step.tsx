@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react'
-import type { ModelApi, DownloadedWhisperModel, SettingsApi } from '@shared/ipc'
+import type { ModelApi, DownloadedWhisperModel, SettingsApi, AppApi } from '@shared/ipc'
 import { useNavigate } from '@/app/navigation'
 import { Banner } from '@/components/banner'
 import { Input } from '@/components/ui/input'
@@ -75,7 +75,7 @@ function SettingRow({
 }
 
 interface StepSettingsProps {
-  desktop: ModelApi & Pick<SettingsApi, 'getSettings'>
+  desktop: ModelApi & Pick<SettingsApi, 'getSettings'> & Pick<AppApi, 'getRuntimeStatus'>
   settings: TranscriptionSettings
   setSettings: Dispatch<SetStateAction<TranscriptionSettings>>
 }
@@ -95,6 +95,7 @@ export default function StepSettings({
   const [isLoadingModels, setIsLoadingModels] = useState(true)
   const [languageSearch, setLanguageSearch] = useState('')
   const [hfToken, setHfToken] = useState<string | null>(null)
+  const [isCpuOnlyRuntime, setIsCpuOnlyRuntime] = useState(false)
 
   const update = (key: keyof TranscriptionSettings, value: boolean | string): void =>
     setSettings({ ...settings, [key]: value })
@@ -141,6 +142,16 @@ export default function StepSettings({
   useEffect(() => {
     void desktop.getSettings().then((s) => setHfToken(s.hfToken))
   }, [desktop])
+
+  useEffect(() => {
+    void desktop.getRuntimeStatus().then((status) => {
+      const isCpu = status.active?.accelerator === 'cpu'
+      setIsCpuOnlyRuntime(isCpu)
+      if (isCpu) {
+        setSettings((prev) => ({ ...prev, compute: 'cpu' }))
+      }
+    })
+  }, [desktop, setSettings])
 
   const hasDownloadedModels = downloadedModels.length > 0
   const selectedDownloadedModel = downloadedModels.find((model) => model.name === settings.model)
@@ -324,20 +335,21 @@ export default function StepSettings({
           <SettingRow
             icon={Cpu}
             label={settingRows.compute.label}
-            description={settingRows.compute.description}
-            tooltip={settingRows.compute.tooltip}
+            description={isCpuOnlyRuntime ? 'CPU-only runtime installed' : settingRows.compute.description}
+            tooltip={isCpuOnlyRuntime ? 'The installed runtime only supports CPU. Install a CUDA runtime to enable GPU.' : settingRows.compute.tooltip}
           >
-            <div className="flex items-center gap-2 p-1 rounded-lg bg-secondary">
+            <div className={`flex items-center gap-2 p-1 rounded-lg bg-secondary ${isCpuOnlyRuntime ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {captions.newTranscription.settings.computeModes.map((mode) => (
                 <button
                   key={mode.value}
-                  onClick={() => update('compute', mode.value)}
+                  onClick={() => !isCpuOnlyRuntime && update('compute', mode.value)}
+                  disabled={isCpuOnlyRuntime}
                   className={`px-4 py-1.5 rounded-md text-[12px] font-medium transition-all
                     ${
                       settings.compute === mode.value
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                    } disabled:cursor-not-allowed`}
                 >
                   {mode.label}
                 </button>

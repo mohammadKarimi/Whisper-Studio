@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { captions } from '@/lib/strings'
 import StepFiles, { type TranscriptionFile } from './components/files-step'
 import StepSettings, { type TranscriptionSettings } from './components/settings-step'
-import StepOutput from './components/output-step'
 import Processing from './components/processing-step'
 import { ArrowLeft, ArrowRight, ChevronRight, Sparkles } from 'lucide-react'
 
@@ -22,10 +21,6 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
   const [settings, setSettings] = useState<TranscriptionSettings>({
     ...captions.newTranscription.initialSettings
   })
-  const [outputFormats, setOutputFormats] = useState<string[]>(() => [
-    ...captions.newTranscription.initialOutputFormats
-  ])
-
   useEffect(() => {
     void desktop.getSettings().then((s) => {
       setSettings((prev) => ({
@@ -34,9 +29,6 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
         model: s.defaultModel ?? prev.model,
         compute: s.defaultCompute !== 'auto' ? s.defaultCompute : prev.compute
       }))
-      if (s.defaultExportFormats.length > 0) {
-        setOutputFormats(s.defaultExportFormats)
-      }
     })
   }, [desktop])
 
@@ -69,7 +61,7 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
               <button
                 onClick={() => isAccessible && setStep(s.id)}
                 disabled={!isAccessible}
-                className={`flex items-center gap-2.5 px-4 py-2 rounded-lg transition-all text-left
+                className={`flex flex-1 items-center gap-2.5 px-4 py-2 rounded-lg transition-all text-left
                 ${
                   step === s.id
                     ? 'bg-primary/10 border border-primary/20'
@@ -109,26 +101,11 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
         {step === 2 && (
           <StepSettings desktop={desktop} settings={settings} setSettings={setSettings} />
         )}
-        {step === 3 && (
-          <StepOutput
-            file={file}
-            outputFormats={outputFormats}
-            setOutputFormats={setOutputFormats}
-            settings={settings}
-          />
-        )}
-        {step === 4 && (
-          <Processing
-            desktop={desktop}
-            file={file}
-            outputFormats={outputFormats}
-            settings={settings}
-          />
-        )}
+        {step === 3 && <Processing desktop={desktop} file={file} settings={settings} />}
       </div>
 
       {/* Navigation */}
-      {step < 4 && (
+      {step < 3 && (
         <div className="flex items-center justify-between mt-8 pt-6">
           <Button
             variant="ghost"
@@ -141,17 +118,17 @@ export default function NewTranscription({ desktop }: NewTranscriptionProps) {
               : captions.newTranscription.navigation.cancel}
           </Button>
           <div className="flex items-center gap-3">
-            {step < 3 && (
-              <Button
-                onClick={() => setStep(step + 1)}
-                disabled={(step === 1 && !file) || (step === 2 && !settings.model)}
-                className="gap-2"
-              >
+            {step === 1 && (
+              <Button onClick={() => setStep(2)} disabled={!file} className="gap-2">
                 {captions.newTranscription.navigation.continue} <ArrowRight className="w-4 h-4" />
               </Button>
             )}
-            {step === 3 && (
-              <Button onClick={() => setStep(4)} className="gap-2 glow-primary">
+            {step === 2 && (
+              <Button
+                onClick={() => setStep(3)}
+                disabled={!settings.model}
+                className="gap-2 glow-primary"
+              >
                 <Sparkles className="w-4 h-4" />
                 {captions.newTranscription.navigation.startTranscription}
               </Button>
