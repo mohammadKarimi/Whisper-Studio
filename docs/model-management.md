@@ -86,7 +86,6 @@ from faster_whisper import WhisperModel
 WhisperModel(
     "<modelId>",
     device='cpu',
-    compute_type='int8',
     download_root="<cacheDir>"          # pins download to app userData
 )
 print(json.dumps({"ok": True}))

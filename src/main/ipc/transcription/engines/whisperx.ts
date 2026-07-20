@@ -24,8 +24,6 @@ function buildArgs(
 ): string[] {
   const isCuda = request.compute === 'gpu'
   const device = isCuda ? 'cuda' : 'cpu'
-  // float16 is the recommended compute type for GPU; int8 is faster than float32 on CPU.
-  const computeType = isCuda ? 'float16' : 'int8'
   const language = normalizeLanguage(request.language)
   const model = request.model || 'base'
 
@@ -38,9 +36,7 @@ function buildArgs(
     '--output_dir',
     outputDir,
     '--device',
-    device,
-    '--compute_type',
-    computeType
+    device
   ]
 
   if (language) {
