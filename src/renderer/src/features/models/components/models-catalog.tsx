@@ -314,7 +314,9 @@ export default function ModelsCatalog({
                 variant="ghost"
                 size="sm"
                 onClick={() => setConfirmingEntry(null)}
-                disabled={confirmingEntry.installed ? deletingIds.has(confirmingEntry.installed.id) : false}
+                disabled={
+                  confirmingEntry.installed ? deletingIds.has(confirmingEntry.installed.id) : false
+                }
                 className="text-xs"
               >
                 {downloadedCaptions.actions.cancel}
@@ -323,7 +325,9 @@ export default function ModelsCatalog({
                 variant="destructive"
                 size="sm"
                 onClick={() => void handleDelete(confirmingEntry)}
-                disabled={confirmingEntry.installed ? deletingIds.has(confirmingEntry.installed.id) : false}
+                disabled={
+                  confirmingEntry.installed ? deletingIds.has(confirmingEntry.installed.id) : false
+                }
                 className="gap-1.5 text-xs"
               >
                 {confirmingEntry.installed && deletingIds.has(confirmingEntry.installed.id) ? (
@@ -532,25 +536,25 @@ export default function ModelsCatalog({
                           : ''}
                       </span>
                       <Tooltip>
-                          <TooltipTrigger>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setConfirmingEntry(entry)}
-                              disabled={isDeleting}
-                              title={downloadedCaptions.actions.delete}
-                              aria-label={downloadedCaptions.actions.delete}
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            >
-                              {isDeleting ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <Trash2 className="w-3.5 h-3.5" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
-                        </Tooltip>
+                        <TooltipTrigger>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setConfirmingEntry(entry)}
+                            disabled={isDeleting}
+                            title={downloadedCaptions.actions.delete}
+                            aria-label={downloadedCaptions.actions.delete}
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          >
+                            {isDeleting ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{downloadedCaptions.actions.delete}</TooltipContent>
+                      </Tooltip>
                     </div>
                   ) : (
                     <Button
