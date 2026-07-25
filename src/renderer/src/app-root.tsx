@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { AppRouteView } from './app/app-route-view'
+import { getRouteTitleBarLabel } from './app/routing'
 import { useAppRoute } from './app/use-app-route'
 import { useDesktopShell } from './app/use-desktop-shell'
 import { AppSidebar } from './components/app-sidebar'
@@ -83,7 +84,7 @@ export function App(): JSX.Element {
 
       <TitleBar
         appName={appInfo?.name ?? captions.app.defaultName}
-        title={showSetup ? 'Runtime Setup' : captions.titleBar.workspace}
+        title={showSetup ? 'Runtime Setup' : getRouteTitleBarLabel(activeRoute)}
         isMaximized={isWindowMaximized}
         platform={platform}
         onMinimize={desktop.windowControls.minimize}
