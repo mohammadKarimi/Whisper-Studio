@@ -40,6 +40,19 @@ export function getRoutePath(routeId: AppRouteId): string {
   return routePaths[routeId]
 }
 
+const routeLabels: Record<AppRouteId, string> = {
+  dashboard: 'Your Transcriptions',
+  new: 'New Transcription',
+  models: 'Whisper Models',
+  settings: 'Settings',
+  studio: 'Studio',
+  export: 'Export'
+}
+
+export function getRouteTitleBarLabel(routeId: AppRouteId): string {
+  return `${getRoutePath(routeId)} · ${routeLabels[routeId]}`
+}
+
 export function isAppRouteId(value: string): value is AppRouteId {
   return routeIds.includes(value as AppRouteId)
 }
