@@ -96,6 +96,7 @@ const browserDesktopApi: DesktopApi = {
     return ''
   },
   onModelDownloadProgress: () => () => undefined,
+  onMeetingStatusChanged: () => () => undefined,
   selectWhisperFile: async () => ({ canceled: true }),
   transcribeWithWhisper: async (request) => ({
     command: `python.exe -u -c faster_whisper "${request.filePath}"`,

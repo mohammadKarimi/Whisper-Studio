@@ -10,6 +10,7 @@ import type {
   WhisperModelActionResult,
   WhisperModelDownloadProgress
 } from './models'
+import type { MeetingStatus } from './meeting'
 import type { FileSelection, AppSettings, UpdateCheckResult } from './settings'
 import type {
   TranscriptionRecord,
@@ -42,6 +43,11 @@ export interface ModelApi {
   onModelDownloadProgress: (
     callback: (progress: WhisperModelDownloadProgress) => void
   ) => () => void
+}
+
+/** Meeting detection status changes from the desktop shell. */
+export interface MeetingApi {
+  onMeetingStatusChanged: (callback: (status: MeetingStatus) => void) => () => void
 }
 
 /** Whisper transcription workflow and saved transcription records. */
@@ -85,6 +91,7 @@ export interface SettingsApi {
 /** Full desktop API exposed by the preload bridge. Composed from all sub-interfaces. */
 export type DesktopApi = AppApi &
   ModelApi &
+  MeetingApi &
   TranscriptionApi &
   FileSystemApi &
   WindowControlsApi &

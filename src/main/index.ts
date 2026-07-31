@@ -4,6 +4,7 @@ import { extname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { registerAllHandlers } from './ipc'
 import { IPC_CHANNELS } from '../shared/ipc'
+import { startMeetingWatcher } from './features/meetingDetector'
 
 // Register a safe protocol for serving local media files from the renderer
 protocol.registerSchemesAsPrivileged([
@@ -11,6 +12,7 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 let mainWindow: BrowserWindow | null = null
+let stopMeetingWatcher: (() => void) | null = null
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 
@@ -173,12 +175,31 @@ app.whenReady().then(() => {
   registerAllHandlers(() => mainWindow)
 
   mainWindow = createMainWindow()
+  stopMeetingWatcher = startMeetingWatcher((status) => {
+    const targetWindow = mainWindow
+    if (targetWindow && !targetWindow.isDestroyed()) {
+      targetWindow.webContents.send(IPC_CHANNELS.meetingStatusChanged, status)
+    }
+
+    if (status.inMeeting) {
+      console.info(
+        `[meetingDetector] Meeting started (${status.platform}, ${status.confidence})`
+      )
+    } else {
+      console.info('[meetingDetector] Meeting ended')
+    }
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createMainWindow()
     }
   })
+})
+
+app.on('before-quit', () => {
+  stopMeetingWatcher?.()
+  stopMeetingWatcher = null
 })
 
 app.on('window-all-closed', () => {
