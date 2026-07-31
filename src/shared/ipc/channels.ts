@@ -13,6 +13,7 @@ export const IPC_CHANNELS = {
   downloadModel: 'models:download',
   modelDownloadProgress: 'models:download-progress',
   deleteModel: 'models:delete',
+  meetingStatusChanged: 'meeting:status-changed',
   windowIsMaximized: 'window:is-maximized',
   windowStateChanged: 'window:state-changed',
   windowMinimize: 'window:minimize',

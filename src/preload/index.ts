@@ -10,6 +10,7 @@ import {
   type DownloadedWhisperModelsResult,
   type FileSystemApi,
   type ModelApi,
+  type MeetingApi,
   type RuntimeActionResult,
   type RuntimeInstallProgress,
   type RuntimeManifest,
@@ -68,6 +69,19 @@ const modelApi: ModelApi = {
     }
     ipcRenderer.on(IPC_CHANNELS.modelDownloadProgress, listener)
     return () => ipcRenderer.removeListener(IPC_CHANNELS.modelDownloadProgress, listener)
+  }
+}
+
+const meetingApi: MeetingApi = {
+  onMeetingStatusChanged: (callback) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      status: Parameters<typeof callback>[0]
+    ): void => {
+      callback(status)
+    }
+    ipcRenderer.on(IPC_CHANNELS.meetingStatusChanged, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.meetingStatusChanged, listener)
   }
 }
 
@@ -135,6 +149,7 @@ const settingsApi: SettingsApi = {
 const desktopApi: DesktopApi = {
   ...appApi,
   ...modelApi,
+  ...meetingApi,
   ...transcriptionApi,
   ...fileSystemApi,
   ...windowControlsApi,
