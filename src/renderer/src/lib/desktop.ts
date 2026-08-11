@@ -110,6 +110,9 @@ const browserDesktopApi: DesktopApi = {
   deleteTranscription: async () => ({ ok: false }),
   readTextFile: async () => '',
   writeTextFile: async () => {},
+  saveRecording: async () => {
+    throw new Error('Meeting recording is available in the Electron desktop app.')
+  },
   selectDirectory: async () => null,
   getSettings: async () => ({
     defaultModel: null,

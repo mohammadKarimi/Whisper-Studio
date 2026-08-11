@@ -30,7 +30,8 @@ export const captions = {
         title: '',
         items: [
           { label: 'Your Transcriptions', routeId: 'dashboard' },
-          { label: 'New Transcription', routeId: 'new' }
+          { label: 'New Transcription', routeId: 'new' },
+          { label: 'Meeting Recorder', routeId: 'meeting' }
         ]
       },
       {
