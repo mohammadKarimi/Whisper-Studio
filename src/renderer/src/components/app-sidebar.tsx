@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Settings,
   AudioLines,
+  Mic,
   Moon,
   Sun,
   Brain,
@@ -19,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 const navIcons = {
   dashboard: LayoutDashboard,
   new: AudioLines,
+  meeting: Mic,
   settings: Settings,
   studio: LayoutDashboard,
   export: LayoutDashboard,

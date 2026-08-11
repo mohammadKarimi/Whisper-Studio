@@ -103,6 +103,12 @@ const fileSystemApi: FileSystemApi = {
     ipcRenderer.invoke(IPC_CHANNELS.readTextFile, path) as Promise<string>,
   writeTextFile: (path: string, content: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.writeTextFile, path, content) as Promise<void>,
+  saveRecording: (data: ArrayBuffer, metadata: { mimeType: string; startedAt: number }) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.saveRecording,
+      data,
+      metadata
+    ) as Promise<{ fileName: string; filePath: string }>,
   selectDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.selectDirectory) as Promise<string | null>
 }
 

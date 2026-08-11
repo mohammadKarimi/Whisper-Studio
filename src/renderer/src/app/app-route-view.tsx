@@ -6,6 +6,7 @@ import Studio from '@/features/studio'
 import Export from '@/features/export'
 import Dashboard from '@/features/dashboard'
 import Models from '@/features/models'
+import MeetingRecorder from '@/features/meeting-recorder'
 
 interface AppRouteViewProps {
   activeRoute: AppRouteId
@@ -16,6 +17,8 @@ export function AppRouteView({ activeRoute, desktop }: AppRouteViewProps): JSX.E
   switch (activeRoute) {
     case 'new':
       return <NewTranscription desktop={desktop} />
+    case 'meeting':
+      return <MeetingRecorder desktop={desktop} />
     case 'settings':
       return <SettingsPage desktop={desktop} />
     case 'studio':

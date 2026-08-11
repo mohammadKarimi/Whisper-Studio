@@ -1,10 +1,26 @@
-export type AppRouteId = 'dashboard' | 'new' | 'studio' | 'settings' | 'export' | 'models'
+export type AppRouteId =
+  | 'dashboard'
+  | 'new'
+  | 'meeting'
+  | 'studio'
+  | 'settings'
+  | 'export'
+  | 'models'
 
-const routeIds: AppRouteId[] = ['dashboard', 'new', 'studio', 'settings', 'export', 'models']
+const routeIds: AppRouteId[] = [
+  'dashboard',
+  'new',
+  'meeting',
+  'studio',
+  'settings',
+  'export',
+  'models'
+]
 
 const routePaths: Record<AppRouteId, string> = {
   dashboard: '/',
   new: '/new',
+  meeting: '/meeting',
   studio: '/studio',
   settings: '/settings',
   export: '/export',
@@ -43,6 +59,7 @@ export function getRoutePath(routeId: AppRouteId): string {
 const routeLabels: Record<AppRouteId, string> = {
   dashboard: 'Your Transcriptions',
   new: 'New Transcription',
+  meeting: 'Meeting Recorder',
   models: 'Whisper Models',
   settings: 'Settings',
   studio: 'Studio',

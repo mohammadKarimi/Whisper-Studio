@@ -25,6 +25,7 @@ export const IPC_CHANNELS = {
   deleteTranscription: 'transcriptions:delete',
   readTextFile: 'fs:read-text-file',
   writeTextFile: 'fs:write-text-file',
+  saveRecording: 'fs:save-recording',
   selectDirectory: 'fs:select-directory',
   selectFile: 'fs:select-file',
   settingsGet: 'settings:get',
