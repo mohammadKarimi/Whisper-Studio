@@ -1,9 +1,20 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from '@/app/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { captions } from '@/lib/strings'
-import { Search, Replace, Download, Check, FileAudio, Clock, Loader2, Save, X } from 'lucide-react'
+import {
+  Search,
+  Replace,
+  Download,
+  Check,
+  FileAudio,
+  Clock,
+  Loader2,
+  Save,
+  Trash2,
+  X
+} from 'lucide-react'
 import AudioPlayer from '@/features/studio/components/audio-player'
 import SpeakerPanel from '@/features/studio/components/speaker-panel'
 import TranscriptSegment from '@/features/studio/components/transcript-segment'
@@ -19,6 +30,8 @@ interface StudioProps {
 export default function Studio({ desktop }: StudioProps) {
   const { record, setRecord } = useStudioContext()
   const { navigateTo } = useAppRoute()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const {
     segments,
     loading,
@@ -72,6 +85,16 @@ export default function Studio({ desktop }: StudioProps) {
     navigateTo('export')
   }
 
+  async function handleDelete(): Promise<void> {
+    if (!record) return
+    setDeleting(true)
+    await desktop.deleteTranscription(record.id)
+    setRecord(null)
+    setDeleting(false)
+    setConfirmOpen(false)
+    navigateTo('dashboard')
+  }
+
   const speakers = useMemo(() => {
     const map = new Map<string, { speaker: string; name: string; segments: number }>()
     for (const seg of segments) {
@@ -86,6 +109,46 @@ export default function Studio({ desktop }: StudioProps) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Confirmation modal */}
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-[15px] font-semibold mb-1">
+              {captions.studio.confirmDelete.title}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mb-5">
+              {captions.studio.confirmDelete.description}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={deleting}
+                onClick={() => setConfirmOpen(false)}
+              >
+                {captions.studio.confirmDelete.cancel}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1.5"
+                disabled={deleting}
+                onClick={() => void handleDelete()}
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {captions.studio.confirmDelete.deleting}
+                  </>
+                ) : (
+                  captions.studio.confirmDelete.confirm
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="shrink-0 border-b border-border/50 bg-card/40 backdrop-blur-xl px-6 py-3">
         <div className="flex items-center justify-between">
@@ -144,6 +207,15 @@ export default function Studio({ desktop }: StudioProps) {
               onClick={handleExport}
             >
               <Download className="w-3.5 h-3.5" /> {captions.studio.actions.export}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+              disabled={!record || deleting}
+              onClick={() => setConfirmOpen(true)}
+            >
+              <Trash2 className="w-3.5 h-3.5" /> {captions.studio.actions.delete}
             </Button>
           </div>
         </div>
