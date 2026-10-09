@@ -282,11 +282,20 @@ export const captions = {
       language: 'EN',
       label: 'Label',
       export: 'Export',
+      delete: 'Delete',
       replace: 'Replace',
       replaceAll: 'Replace All',
       comments: 'Comments',
       followOn: 'Auto Scroll: On',
       followOff: 'Auto Scroll: Off'
+    },
+    confirmDelete: {
+      title: 'Delete transcription?',
+      description:
+        'This will permanently remove the transcription and all its files. This cannot be undone.',
+      cancel: 'Cancel',
+      confirm: 'Delete',
+      deleting: 'Deleting…'
     },
     placeholders: {
       search: 'Search transcript…',
